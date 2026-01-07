@@ -202,5 +202,12 @@ export const adminService = {
     const response = await api.delete(`/admin/schedules/${id}`);
     return response.data;
   },
+
+  // ========== REPORTS ==========
+  // Lấy báo cáo thống kê appointments
+  async getReports(params = {}) {
+    const response = await api.get('/admin/reports', { params });
+    return response.data;
+  },
 };
 

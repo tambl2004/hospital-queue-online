@@ -2,6 +2,7 @@
 const app = require('./app');
 const http = require('http');
 const { Server } = require('socket.io');
+const { setupQueueHandlers } = require('./socketHandlers/queue.handler');
 
 require('dotenv').config();
 
@@ -13,19 +14,23 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.CLIENT_URL || "http://localhost:5173",
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
 // Make io accessible to routes
 app.set('io', io);
 
-// Socket.IO connection handling
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+// Setup Socket.IO handlers
+setupQueueHandlers(io);
 
+// Basic connection logging (for other socket events if needed)
+io.on('connection', (socket) => {
+  console.log('Socket connected:', socket.id);
+  
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    console.log('Socket disconnected:', socket.id);
   });
 });
 
