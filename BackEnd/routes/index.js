@@ -7,12 +7,18 @@ const usersRoutes = require('./users.routes');
 const attendanceRoutes = require('./attendance.routes');
 const devicesRoutes = require('./devices.routes');
 const systemRoutes = require('./system.routes');
+const departmentsRoutes = require('./departments.routes');
+const doctorsRoutes = require('./doctors.routes');
+const roomsRoutes = require('./rooms.routes');
 
 router.use('/auth', authRoutes);
 router.use('/users', usersRoutes);
 router.use('/attendance', attendanceRoutes);
 router.use('/devices', devicesRoutes);
 router.use('/system', systemRoutes);
+router.use('/admin/departments', departmentsRoutes);
+router.use('/admin/doctors', doctorsRoutes);
+router.use('/admin/rooms', roomsRoutes);
 
 module.exports = router;
 

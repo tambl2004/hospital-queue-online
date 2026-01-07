@@ -1,7 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './auth/Login';
-import Register from './auth/Register';
-import ForgotPassword from './auth/ForgotPassword';
+import Login from './Auth/Login';
+import Register from './Auth/Register';
+import ForgotPassword from './Auth/ForgotPassword';
+import Dashboard from './Admin/Dashboard';
+import AdminDepartmentList from './Admin/AdminDepartmentList';
+import AdminDoctorList from './Admin/AdminDoctorList';
 import { authService } from './services/authService';
 
 function App() {
@@ -16,8 +19,10 @@ function App() {
         {/* Default redirect */}
         <Route path="/" element={<Navigate to="/auth/login" replace />} />
         
-        {/* Protected Routes - Placeholder for now */}
-        <Route path="/admin" element={<ProtectedRoute><div>Admin Dashboard</div></ProtectedRoute>} />
+        {/* Protected Routes */}
+        <Route path="/admin" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/admin/departments" element={<ProtectedRoute><AdminDepartmentList /></ProtectedRoute>} />
+        <Route path="/admin/doctors" element={<ProtectedRoute><AdminDoctorList /></ProtectedRoute>} />
         <Route path="/doctor" element={<ProtectedRoute><div>Doctor Dashboard</div></ProtectedRoute>} />
         <Route path="/staff" element={<ProtectedRoute><div>Staff Dashboard</div></ProtectedRoute>} />
         <Route path="/patient" element={<ProtectedRoute><div>Patient Dashboard</div></ProtectedRoute>} />
