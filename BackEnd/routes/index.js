@@ -14,6 +14,7 @@ const schedulesRoutes = require('./schedules.routes');
 const appointmentsRoutes = require('./appointments.routes');
 const queueRoutes = require('./queue.routes');
 const reportsRoutes = require('./reports.routes');
+const dashboardRoutes = require('./dashboard.routes');
 
 router.use('/auth', authRoutes);
 router.use('/admin/users', usersRoutes);
@@ -27,6 +28,7 @@ router.use('/admin/schedules', schedulesRoutes);
 router.use('/appointments', appointmentsRoutes);
 router.use('/queue', queueRoutes);
 router.use('/admin/reports', reportsRoutes);
+router.use('/admin/dashboard', dashboardRoutes);
 
 module.exports = router;
 

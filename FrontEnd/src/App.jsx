@@ -35,9 +35,9 @@ function App() {
         <Route path="/admin/appointments" element={<ProtectedRoute><AdminAppointmentList /></ProtectedRoute>} />
         <Route path="/admin/queue" element={<ProtectedRoute><AdminQueueDashboard /></ProtectedRoute>} />
         <Route path="/admin/statistics" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
-        <Route path="/doctor" element={<ProtectedRoute><div>Doctor Dashboard</div></ProtectedRoute>} />
-        <Route path="/staff" element={<ProtectedRoute><div>Staff Dashboard</div></ProtectedRoute>} />
-        <Route path="/patient" element={<ProtectedRoute><div>Patient Dashboard</div></ProtectedRoute>} />
+        <Route path="/doctor" element={<ProtectedRoute><div>Bác sĩ Dashboard</div></ProtectedRoute>} />
+        <Route path="/staff" element={<ProtectedRoute><div>Nhân viên Dashboard</div></ProtectedRoute>} />
+        <Route path="/patient" element={<ProtectedRoute><div>Bệnh nhân Dashboard</div></ProtectedRoute>} />
       </Routes>
     </Router>
   );

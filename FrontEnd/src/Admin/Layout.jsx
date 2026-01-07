@@ -33,7 +33,6 @@ const Layout = ({ children }) => {
     { path: '/admin/appointments', label: 'Quản lý lượt đăng ký', icon: FaClipboardList },
     { path: '/admin/queue', label: 'Queue & gọi số', icon: FaBullhorn },
     { path: '/admin/statistics', label: 'Thống kê', icon: FaChartLine },
-    { path: '/admin/settings', label: 'Cài đặt', icon: FaCog },
   ];
 
   const handleLogout = () => {

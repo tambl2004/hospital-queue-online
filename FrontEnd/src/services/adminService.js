@@ -1,33 +1,14 @@
 import api from './api';
 
 export const adminService = {
-  // Lấy thống kê tổng quan
-  async getDashboardStats() {
+  // Lấy thống kê tổng quan dashboard
+  async getDashboardData() {
     try {
-      const response = await api.get('/admin/dashboard/stats');
+      const response = await api.get('/admin/dashboard');
       return response.data;
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      // Trả về dữ liệu mẫu nếu API chưa sẵn sàng
-      return {
-        totalPatients: 1250,
-        totalDoctors: 45,
-        totalStaff: 120,
-        totalAppointments: 3840,
-        todayAppointments: 42,
-        pendingAppointments: 15,
-        completedAppointments: 3250,
-        cancelledAppointments: 35,
-        appointmentsByStatus: {
-          WAITING: 15,
-          CALLED: 8,
-          IN_PROGRESS: 12,
-          DONE: 3250,
-          CANCELLED: 35,
-        },
-        recentAppointments: [],
-        appointmentsByMonth: [],
-      };
+      console.error('Error fetching dashboard data:', error);
+      throw error;
     }
   },
 
