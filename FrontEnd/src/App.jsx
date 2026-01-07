@@ -8,6 +8,7 @@ import AdminDoctorList from './Admin/AdminDoctorList';
 import AdminRoomList from './Admin/AdminRoomList';
 import AdminSchedulePage from './Admin/AdminSchedulePage';
 import AdminUserList from './Admin/AdminUserList';
+import AdminAppointmentList from './Admin/AdminAppointmentList';
 import { authService } from './services/authService';
 
 function App() {
@@ -29,7 +30,7 @@ function App() {
         <Route path="/admin/doctors" element={<ProtectedRoute><AdminDoctorList /></ProtectedRoute>} />
         <Route path="/admin/rooms" element={<ProtectedRoute><AdminRoomList /></ProtectedRoute>} />
         <Route path="/admin/schedules" element={<ProtectedRoute><AdminSchedulePage /></ProtectedRoute>} />
-        <Route path="/admin/appointments" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Quản lý lượt đăng ký</h1><p className="mt-4 text-gray-600">Chức năng đang được phát triển...</p></div></ProtectedRoute>} />
+        <Route path="/admin/appointments" element={<ProtectedRoute><AdminAppointmentList /></ProtectedRoute>} />
         <Route path="/admin/queue" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Queue & gọi số (Realtime)</h1><p className="mt-4 text-gray-600">Chức năng đang được phát triển...</p></div></ProtectedRoute>} />
         <Route path="/admin/statistics" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Thống kê</h1><p className="mt-4 text-gray-600">Chức năng đang được phát triển...</p></div></ProtectedRoute>} />
         <Route path="/doctor" element={<ProtectedRoute><div>Doctor Dashboard</div></ProtectedRoute>} />
