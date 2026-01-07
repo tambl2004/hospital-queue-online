@@ -146,5 +146,30 @@ export const adminService = {
     const response = await api.patch(`/admin/rooms/${id}/status`, { is_active });
     return response.data;
   },
+
+  // ========== SCHEDULES ==========
+  // Lấy danh sách lịch khám theo bác sĩ và ngày
+  async getSchedules(params = {}) {
+    const response = await api.get('/admin/schedules', { params });
+    return response.data;
+  },
+
+  // Tạo lịch tự động (bulk)
+  async createBulkSchedules(data) {
+    const response = await api.post('/admin/schedules/bulk', data);
+    return response.data;
+  },
+
+  // Cập nhật slot (is_active hoặc max_patients)
+  async updateSchedule(id, data) {
+    const response = await api.patch(`/admin/schedules/${id}`, data);
+    return response.data;
+  },
+
+  // Xóa slot
+  async deleteSchedule(id) {
+    const response = await api.delete(`/admin/schedules/${id}`);
+    return response.data;
+  },
 };
 

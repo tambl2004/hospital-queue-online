@@ -10,6 +10,7 @@ const systemRoutes = require('./system.routes');
 const departmentsRoutes = require('./departments.routes');
 const doctorsRoutes = require('./doctors.routes');
 const roomsRoutes = require('./rooms.routes');
+const schedulesRoutes = require('./schedules.routes');
 
 router.use('/auth', authRoutes);
 router.use('/users', usersRoutes);
@@ -19,6 +20,7 @@ router.use('/system', systemRoutes);
 router.use('/admin/departments', departmentsRoutes);
 router.use('/admin/doctors', doctorsRoutes);
 router.use('/admin/rooms', roomsRoutes);
+router.use('/admin/schedules', schedulesRoutes);
 
 module.exports = router;
 
