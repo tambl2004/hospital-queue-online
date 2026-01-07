@@ -12,7 +12,8 @@ const ConfirmToggleStatusModal = ({
 
   const newStatus = !item.is_active;
   const action = newStatus ? 'kích hoạt' : 'ngừng hoạt động';
-  const itemName = item.full_name || item.name || `#${item.id}`;
+  const itemName =
+    item.full_name || item.name || item.room_code || item.room_name || `#${item.id}`;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -44,6 +45,8 @@ const ConfirmToggleStatusModal = ({
                 <p className="text-sm text-gray-500">
                   {itemType === 'bác sĩ' &&
                     'Bác sĩ sẽ không hiển thị trong danh sách đặt lịch mới, nhưng vẫn giữ lịch sử khám.'}
+                  {itemType === 'phòng khám' &&
+                    'Phòng khám sẽ không hiển thị trong các dropdown tạo/sửa bác sĩ và đặt lịch mới, nhưng vẫn giữ lịch sử.'}
                 </p>
               )}
             </div>

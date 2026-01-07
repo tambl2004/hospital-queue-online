@@ -76,8 +76,8 @@ const DoctorCreateModal = ({
 
     if (!formData.password) {
       newErrors.password = 'Mật khẩu không được để trống';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
     }
 
     if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone.replace(/\s/g, ''))) {
@@ -115,7 +115,7 @@ const DoctorCreateModal = ({
 
   // Lọc rooms theo department đã chọn
   const filteredRooms = formData.department_id
-    ? rooms.filter((room) => room.department_id === parseInt(formData.department_id))
+    ? rooms.filter((room) => (room.department?.id || room.department_id) === parseInt(formData.department_id))
     : [];
 
   if (!isOpen) return null;
@@ -193,7 +193,7 @@ const DoctorCreateModal = ({
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     errors.password ? 'border-red-500' : 'border-gray-300'
                   }`}
-                  placeholder="Tối thiểu 8 ký tự"
+                  placeholder="Tối thiểu 6 ký tự"
                   disabled={loading}
                 />
                 {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}

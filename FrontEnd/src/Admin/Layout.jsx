@@ -7,11 +7,14 @@ import {
   FaUserMd,
   FaCalendarAlt,
   FaHospital,
-  FaWrench,
-  FaClock,
   FaCog,
   FaSignOutAlt,
   FaBars,
+  FaDoorOpen,
+  FaCalendarCheck,
+  FaClipboardList,
+  FaBullhorn,
+  FaChartLine,
 } from 'react-icons/fa';
 
 const Layout = ({ children }) => {
@@ -24,10 +27,12 @@ const Layout = ({ children }) => {
     { path: '/admin', label: 'Dashboard', icon: FaChartBar },
     { path: '/admin/users', label: 'Quản lý người dùng', icon: FaUsers },
     { path: '/admin/doctors', label: 'Quản lý bác sĩ', icon: FaUserMd },
-    { path: '/admin/appointments', label: 'Quản lý lịch hẹn', icon: FaCalendarAlt },
     { path: '/admin/departments', label: 'Quản lý chuyên khoa', icon: FaHospital },
-    { path: '/admin/devices', label: 'Quản lý thiết bị', icon: FaWrench },
-    { path: '/admin/attendance', label: 'Chấm công', icon: FaClock },
+    { path: '/admin/rooms', label: 'Quản lý phòng khám', icon: FaDoorOpen },
+    { path: '/admin/schedules', label: 'Quản lý lịch khám', icon: FaCalendarCheck },
+    { path: '/admin/appointments', label: 'Quản lý lượt đăng ký', icon: FaClipboardList },
+    { path: '/admin/queue', label: 'Queue & gọi số', icon: FaBullhorn },
+    { path: '/admin/statistics', label: 'Thống kê', icon: FaChartLine },
     { path: '/admin/settings', label: 'Cài đặt', icon: FaCog },
   ];
 

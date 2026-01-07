@@ -205,7 +205,7 @@ const AdminDoctorList = () => {
 
   // Lọc rooms theo department đã chọn
   const filteredRooms = filters.department_id
-    ? rooms.filter((room) => room.department_id === parseInt(filters.department_id))
+    ? rooms.filter((room) => (room.department?.id || room.department_id) === parseInt(filters.department_id))
     : rooms;
 
   return (

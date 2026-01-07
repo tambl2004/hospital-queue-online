@@ -86,7 +86,7 @@ const DoctorEditModal = ({
 
   // Lọc rooms theo department đã chọn
   const filteredRooms = formData.department_id
-    ? rooms.filter((room) => room.department_id === parseInt(formData.department_id))
+    ? rooms.filter((room) => (room.department?.id || room.department_id) === parseInt(formData.department_id))
     : [];
 
   if (!isOpen || !doctor) return null;

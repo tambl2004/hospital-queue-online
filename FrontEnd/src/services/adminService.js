@@ -122,5 +122,29 @@ export const adminService = {
     const response = await api.get('/admin/rooms', { params });
     return response.data;
   },
+
+  // Lấy thông tin một phòng khám
+  async getRoomById(id) {
+    const response = await api.get(`/admin/rooms/${id}`);
+    return response.data;
+  },
+
+  // Tạo phòng khám mới
+  async createRoom(data) {
+    const response = await api.post('/admin/rooms', data);
+    return response.data;
+  },
+
+  // Cập nhật phòng khám
+  async updateRoom(id, data) {
+    const response = await api.put(`/admin/rooms/${id}`, data);
+    return response.data;
+  },
+
+  // Cập nhật trạng thái phòng khám
+  async updateRoomStatus(id, is_active) {
+    const response = await api.patch(`/admin/rooms/${id}/status`, { is_active });
+    return response.data;
+  },
 };
 
