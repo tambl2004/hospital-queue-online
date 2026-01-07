@@ -13,7 +13,7 @@ const roomsRoutes = require('./rooms.routes');
 const schedulesRoutes = require('./schedules.routes');
 
 router.use('/auth', authRoutes);
-router.use('/users', usersRoutes);
+router.use('/admin/users', usersRoutes);
 router.use('/attendance', attendanceRoutes);
 router.use('/devices', devicesRoutes);
 router.use('/system', systemRoutes);

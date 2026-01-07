@@ -377,6 +377,22 @@ const createDoctor = async (req, res, next) => {
 
     const userId = userResult.insertId;
 
+    // Lấy role DOCTOR và gán cho user
+    const [doctorRoles] = await connection.execute(
+      'SELECT id FROM roles WHERE code = ?',
+      ['DOCTOR']
+    );
+
+    if (doctorRoles.length === 0) {
+      throw new Error('Role DOCTOR không tồn tại trong hệ thống');
+    }
+
+    // Gán role DOCTOR cho user
+    await connection.execute(
+      'INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)',
+      [userId, doctorRoles[0].id]
+    );
+
     // Insert doctor
     const [doctorResult] = await connection.execute(
       `INSERT INTO doctors (user_id, department_id, room_id, experience_years, bio, is_active)

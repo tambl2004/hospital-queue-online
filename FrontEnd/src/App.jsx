@@ -7,6 +7,7 @@ import AdminDepartmentList from './Admin/AdminDepartmentList';
 import AdminDoctorList from './Admin/AdminDoctorList';
 import AdminRoomList from './Admin/AdminRoomList';
 import AdminSchedulePage from './Admin/AdminSchedulePage';
+import AdminUserList from './Admin/AdminUserList';
 import { authService } from './services/authService';
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         
         {/* Protected Routes */}
         <Route path="/admin" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute><AdminUserList /></ProtectedRoute>} />
         <Route path="/admin/departments" element={<ProtectedRoute><AdminDepartmentList /></ProtectedRoute>} />
         <Route path="/admin/doctors" element={<ProtectedRoute><AdminDoctorList /></ProtectedRoute>} />
         <Route path="/admin/rooms" element={<ProtectedRoute><AdminRoomList /></ProtectedRoute>} />

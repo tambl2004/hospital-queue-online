@@ -31,9 +31,40 @@ export const adminService = {
     }
   },
 
+  // ========== USERS ==========
   // Lấy danh sách người dùng
   async getUsers(params = {}) {
-    const response = await api.get('/users', { params });
+    const response = await api.get('/admin/users', { params });
+    return response.data;
+  },
+
+  // Lấy thông tin một người dùng
+  async getUserById(id) {
+    const response = await api.get(`/admin/users/${id}`);
+    return response.data;
+  },
+
+  // Tạo người dùng mới
+  async createUser(data) {
+    const response = await api.post('/admin/users', data);
+    return response.data;
+  },
+
+  // Cập nhật người dùng
+  async updateUser(id, data) {
+    const response = await api.put(`/admin/users/${id}`, data);
+    return response.data;
+  },
+
+  // Cập nhật trạng thái người dùng
+  async updateUserStatus(id, is_active) {
+    const response = await api.patch(`/admin/users/${id}/status`, { is_active });
+    return response.data;
+  },
+
+  // Xóa người dùng
+  async deleteUser(id) {
+    const response = await api.delete(`/admin/users/${id}`);
     return response.data;
   },
 
