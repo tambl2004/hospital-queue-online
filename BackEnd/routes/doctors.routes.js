@@ -10,16 +10,17 @@ const { authenticate, requireRole } = require('../middlewares/auth');
 
 const router = express.Router();
 
-// Tất cả routes đều yêu cầu xác thực và role ADMIN
+// Tất cả routes đều yêu cầu xác thực
 router.use(authenticate);
-router.use(requireRole(['ADMIN']));
 
-// Routes
-router.get('/', getDoctors);
-router.get('/:id', getDoctorById);
-router.post('/', createDoctor);
-router.put('/:id', updateDoctor);
-router.patch('/:id/status', updateDoctorStatus);
+// GET routes: Cho phép ADMIN và STAFF (chỉ đọc)
+router.get('/', requireRole(['ADMIN', 'STAFF']), getDoctors);
+router.get('/:id', requireRole(['ADMIN', 'STAFF']), getDoctorById);
+
+// POST, PUT, PATCH routes: Chỉ ADMIN
+router.post('/', requireRole(['ADMIN']), createDoctor);
+router.put('/:id', requireRole(['ADMIN']), updateDoctor);
+router.patch('/:id/status', requireRole(['ADMIN']), updateDoctorStatus);
 
 module.exports = router;
 

@@ -29,6 +29,26 @@ exports.getQueueState = async (req, res, next) => {
       });
     }
 
+    // Kiểm tra quyền: DOCTOR chỉ được xem queue của chính mình
+    const userRoles = req.user.roles || [];
+    const isDoctor = userRoles.includes('DOCTOR');
+    const isAdminOrStaff = userRoles.some(role => ['ADMIN', 'STAFF'].includes(role));
+
+    if (isDoctor && !isAdminOrStaff) {
+      // DOCTOR chỉ được xem queue của chính mình
+      const [doctors] = await pool.execute(
+        'SELECT id FROM doctors WHERE user_id = ? AND id = ?',
+        [req.user.id, doctor_id]
+      );
+
+      if (doctors.length === 0) {
+        return res.status(403).json({
+          success: false,
+          message: 'Không có quyền truy cập queue này'
+        });
+      }
+    }
+
     // Query tất cả appointments của doctor + date có queue_number
     const query = `
       SELECT 

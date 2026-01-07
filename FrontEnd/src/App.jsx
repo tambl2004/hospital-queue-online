@@ -11,6 +11,12 @@ import AdminUserList from './Admin/AdminUserList';
 import AdminAppointmentList from './Admin/AdminAppointmentList';
 import AdminQueueDashboard from './Admin/AdminQueueDashboard';
 import AdminReports from './Admin/AdminReports';
+import StaffDashboard from './Staff/StaffDashboard';
+import StaffAppointmentList from './Staff/StaffAppointmentList';
+import StaffQueueDashboard from './Staff/StaffQueueDashboard';
+import DoctorDashboard from './Doctor/DoctorDashboard';
+import DoctorQueue from './Doctor/DoctorQueue';
+import DoctorSchedule from './Doctor/DoctorSchedule';
 import { authService } from './services/authService';
 
 function App() {
@@ -35,8 +41,20 @@ function App() {
         <Route path="/admin/appointments" element={<ProtectedRoute><AdminAppointmentList /></ProtectedRoute>} />
         <Route path="/admin/queue" element={<ProtectedRoute><AdminQueueDashboard /></ProtectedRoute>} />
         <Route path="/admin/statistics" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
-        <Route path="/doctor" element={<ProtectedRoute><div>Bác sĩ Dashboard</div></ProtectedRoute>} />
-        <Route path="/staff" element={<ProtectedRoute><div>Nhân viên Dashboard</div></ProtectedRoute>} />
+        
+        {/* Staff Routes */}
+        <Route path="/staff/dashboard" element={<ProtectedRoute role="STAFF"><StaffDashboard /></ProtectedRoute>} />
+        <Route path="/staff/appointments" element={<ProtectedRoute role="STAFF"><StaffAppointmentList /></ProtectedRoute>} />
+        <Route path="/staff/queue" element={<ProtectedRoute role="STAFF"><StaffQueueDashboard /></ProtectedRoute>} />
+        <Route path="/staff" element={<Navigate to="/staff/dashboard" replace />} />
+        
+        {/* Doctor Routes */}
+        <Route path="/doctor/dashboard" element={<ProtectedRoute role="DOCTOR"><DoctorDashboard /></ProtectedRoute>} />
+        <Route path="/doctor/queue" element={<ProtectedRoute role="DOCTOR"><DoctorQueue /></ProtectedRoute>} />
+        <Route path="/doctor/schedule" element={<ProtectedRoute role="DOCTOR"><DoctorSchedule /></ProtectedRoute>} />
+        <Route path="/doctor" element={<Navigate to="/doctor/dashboard" replace />} />
+        
+        {/* Patient Routes */}
         <Route path="/patient" element={<ProtectedRoute><div>Bệnh nhân Dashboard</div></ProtectedRoute>} />
       </Routes>
     </Router>
@@ -44,11 +62,28 @@ function App() {
 }
 
 // Protected Route Component
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children, role }) {
   const isAuthenticated = authService.isAuthenticated();
   
   if (!isAuthenticated) {
     return <Navigate to="/auth/login" replace />;
+  }
+  
+  // Check role if specified
+  if (role) {
+    const user = authService.getCurrentUser();
+    const userRoles = user?.roles || [];
+    
+    if (!userRoles.includes(role) && !userRoles.includes('ADMIN')) {
+      // Redirect based on user's role
+      if (userRoles.includes('STAFF')) {
+        return <Navigate to="/staff/dashboard" replace />;
+      } else if (userRoles.includes('DOCTOR')) {
+        return <Navigate to="/doctor/dashboard" replace />;
+      } else {
+        return <Navigate to="/auth/login" replace />;
+      }
+    }
   }
   
   return children;

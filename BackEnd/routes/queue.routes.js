@@ -15,13 +15,13 @@ const { authenticate, requireRole } = require('../middlewares/auth');
 /**
  * @route   GET /api/queue/state
  * @desc    Lấy trạng thái queue theo doctor + date
- * @access  Admin, Staff
+ * @access  Admin, Staff, Doctor (chỉ xem queue của chính mình)
  * @query   doctor_id, date (YYYY-MM-DD)
  */
 router.get(
   '/state',
   authenticate,
-  requireRole(['ADMIN', 'STAFF']),
+  requireRole(['ADMIN', 'STAFF', 'DOCTOR']),
   queueController.getQueueState
 );
 

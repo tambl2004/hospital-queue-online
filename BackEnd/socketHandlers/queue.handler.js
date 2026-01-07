@@ -36,15 +36,9 @@ const setupQueueHandlers = (io) => {
   io.on('connection', (socket) => {
     console.log(`[Queue Socket] User connected: ${socket.id}, userId: ${socket.userId}`);
 
-    // Kiểm tra quyền truy cập (ADMIN hoặc STAFF mới được join queue room)
     const userRoles = socket.userRoles || [];
     const isAdminOrStaff = userRoles.some(role => ['ADMIN', 'STAFF'].includes(role));
-
-    if (!isAdminOrStaff) {
-      socket.emit('queue:error', { message: 'Không có quyền truy cập queue dashboard' });
-      socket.disconnect();
-      return;
-    }
+    const isDoctor = userRoles.some(role => role === 'DOCTOR');
 
     // Join queue room
     socket.on('queue:join', async (data) => {
@@ -53,6 +47,24 @@ const setupQueueHandlers = (io) => {
 
         if (!doctorId || !date) {
           socket.emit('queue:error', { message: 'doctorId và date là bắt buộc' });
+          return;
+        }
+
+        // Kiểm tra quyền: ADMIN/STAFF có thể xem mọi queue, DOCTOR chỉ xem queue của chính mình
+        if (!isAdminOrStaff && isDoctor) {
+          // DOCTOR chỉ được xem queue của chính mình
+          const pool = getPool();
+          const [doctors] = await pool.execute(
+            'SELECT id FROM doctors WHERE user_id = ? AND id = ?',
+            [socket.userId, doctorId]
+          );
+
+          if (doctors.length === 0) {
+            socket.emit('queue:error', { message: 'Không có quyền truy cập queue này' });
+            return;
+          }
+        } else if (!isAdminOrStaff && !isDoctor) {
+          socket.emit('queue:error', { message: 'Không có quyền truy cập queue dashboard' });
           return;
         }
 
