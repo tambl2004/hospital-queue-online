@@ -144,11 +144,11 @@ function DoctorDetail() {
                     <span>Kinh nghiệm: {doctor.experience_years} năm</span>
                   </div>
                 )}
-                {doctor.rating_avg > 0 && (
+                {doctor.rating_avg != null && Number(doctor.rating_avg) > 0 && (
                   <div className="flex items-center gap-2">
                     <FaStar className="text-yellow-400" />
                     <span className="font-medium text-gray-700">
-                      {doctor.rating_avg.toFixed(1)} / 5.0
+                      {Number(doctor.rating_avg).toFixed(1)} / 5.0
                     </span>
                   </div>
                 )}

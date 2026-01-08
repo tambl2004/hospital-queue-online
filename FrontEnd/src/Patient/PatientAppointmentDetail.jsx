@@ -189,9 +189,10 @@ function PatientAppointmentDetail() {
                     Kinh nghiệm: {appointment.doctor.experience_years} năm
                   </p>
                 )}
-                {appointment.doctor?.rating_avg > 0 && (
+                {appointment.doctor?.rating_avg != null && 
+                 appointment.doctor.rating_avg > 0 && (
                   <p className="text-sm text-gray-600">
-                    Đánh giá: {appointment.doctor.rating_avg.toFixed(1)} / 5.0
+                    Đánh giá: {Number(appointment.doctor.rating_avg).toFixed(1)} / 5.0
                   </p>
                 )}
               </div>

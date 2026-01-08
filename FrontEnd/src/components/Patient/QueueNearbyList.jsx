@@ -48,39 +48,39 @@ function QueueNearbyList({ queueList, myQueueNumber, myAppointmentId }) {
   };
 
   return (
-    <div className="bg-white rounded-lg p-6 border border-gray-200">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-        <FaHashtag className="text-blue-600" />
+    <div className="bg-white rounded-xl p-6 border-2 border-gray-300 shadow-lg">
+      <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+        <FaHashtag className="text-blue-600 text-2xl" />
         Các số gần nhất
       </h3>
       
-      <div className="space-y-2">
+      <div className="space-y-3">
         {nearbyList.map((item, index) => {
           const isMine = item.appointmentId === myAppointmentId || item.queueNumber === myQueueNumber;
           
           return (
             <div
               key={item.appointmentId || index}
-              className={`flex items-center justify-between p-3 rounded-lg border ${
+              className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-200 ${
                 isMine
-                  ? 'bg-blue-50 border-blue-300 border-2'
-                  : 'bg-gray-50 border-gray-200'
+                  ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-blue-400 shadow-md'
+                  : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <div className={`text-lg font-bold ${
+              <div className="flex items-center gap-4">
+                <div className={`text-2xl font-bold ${
                   isMine ? 'text-blue-700' : 'text-gray-700'
                 }`}>
                   #{item.queueNumber}
                 </div>
                 {isMine && (
-                  <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-1 rounded">
+                  <span className="text-sm font-bold text-blue-700 bg-blue-200 px-3 py-1 rounded-full border border-blue-400">
                     Của tôi
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <span className={`text-xs px-2 py-1 rounded ${getStatusColor(item.status)}`}>
+                <span className={`text-sm font-semibold px-3 py-1 rounded-full ${getStatusColor(item.status)}`}>
                   {getStatusLabel(item.status)}
                 </span>
               </div>

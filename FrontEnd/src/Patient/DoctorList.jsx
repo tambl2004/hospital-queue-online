@@ -136,13 +136,13 @@ function DoctorList() {
                           Kinh nghiệm: {doctor.experience_years} năm
                         </p>
                       )}
-                      {doctor.rating_avg > 0 && (
+                      {doctor.rating_avg != null && Number(doctor.rating_avg) > 0 && (
                         <div className="flex items-center gap-1">
                           <FaStar className="text-yellow-400" />
                           <span className="font-medium text-gray-700">
-                            {doctor.rating_avg.toFixed(1)}
+                            {Number(doctor.rating_avg).toFixed(1)}
                           </span>
-                          <span className="text-sm text-gray-500">({doctor.rating_avg})</span>
+                          <span className="text-sm text-gray-500">({Number(doctor.rating_avg).toFixed(1)})</span>
                         </div>
                       )}
                     </div>

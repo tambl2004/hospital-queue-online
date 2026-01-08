@@ -85,8 +85,39 @@ const setupQueueHandlers = (io) => {
 
           const appointment = appointments[0];
           
+          // Normalize date để so sánh (chỉ lấy phần YYYY-MM-DD)
+          const normalizeDate = (dateValue) => {
+            try {
+              if (!dateValue) return '';
+              
+              // Nếu là Date object, convert sang string
+              if (dateValue instanceof Date) {
+                return dateValue.toISOString().split('T')[0];
+              }
+              
+              // Convert sang string nếu chưa phải
+              const dateStr = String(dateValue);
+              
+              // Nếu là ISO datetime string, extract chỉ phần date
+              if (dateStr.includes('T')) {
+                return dateStr.split('T')[0];
+              }
+              // Nếu có space, lấy phần đầu
+              if (dateStr.includes(' ')) {
+                return dateStr.split(' ')[0];
+              }
+              return dateStr;
+            } catch (err) {
+              console.error('Error normalizing date:', err, dateValue);
+              return String(dateValue || '');
+            }
+          };
+          
+          const appointmentDate = normalizeDate(appointment.appointment_date);
+          const requestedDate = normalizeDate(date);
+          
           // Kiểm tra appointment có khớp với doctorId và date không
-          if (appointment.doctor_id !== parseInt(doctorId) || appointment.appointment_date !== date) {
+          if (appointment.doctor_id !== parseInt(doctorId) || appointmentDate !== requestedDate) {
             socket.emit('queue:error', { message: 'Thông tin lịch khám không khớp' });
             return;
           }
@@ -98,13 +129,42 @@ const setupQueueHandlers = (io) => {
           return;
         }
 
-        const roomKey = `queue:${doctorId}:${date}`;
+        // Normalize date để đảm bảo format nhất quán (YYYY-MM-DD)
+        const normalizeDate = (dateValue) => {
+          try {
+            if (!dateValue) return '';
+            
+            // Nếu là Date object, convert sang string
+            if (dateValue instanceof Date) {
+              return dateValue.toISOString().split('T')[0];
+            }
+            
+            // Convert sang string nếu chưa phải
+            const dateStr = String(dateValue);
+            
+            // Nếu là ISO datetime string, extract chỉ phần date
+            if (dateStr.includes('T')) {
+              return dateStr.split('T')[0];
+            }
+            // Nếu có space, lấy phần đầu
+            if (dateStr.includes(' ')) {
+              return dateStr.split(' ')[0];
+            }
+            return dateStr;
+          } catch (err) {
+            console.error('Error normalizing date:', err, dateValue);
+            return String(dateValue || '');
+          }
+        };
+        
+        const normalizedDate = normalizeDate(date);
+        const roomKey = `queue:${doctorId}:${normalizedDate}`;
         socket.join(roomKey);
         
-        console.log(`[Queue Socket] User ${socket.id} joined room: ${roomKey}`);
+        console.log(`[Queue Socket] User ${socket.id} joined room: ${roomKey} (original date: ${date}, normalized: ${normalizedDate})`);
 
-        // Gửi queue state hiện tại cho client vừa join
-        const queueState = await getQueueStateInternal(pool, doctorId, date);
+        // Gửi queue state hiện tại cho client vừa join (dùng normalized date)
+        const queueState = await getQueueStateInternal(pool, doctorId, normalizedDate);
         socket.emit('queue:state', queueState);
 
       } catch (error) {

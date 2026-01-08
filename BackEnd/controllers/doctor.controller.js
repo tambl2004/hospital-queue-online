@@ -1,4 +1,5 @@
 const { getPool } = require('../config/database');
+const { getQueueStateInternal } = require('./queue.controller');
 
 /**
  * DOCTOR CONTROLLER
@@ -52,56 +53,14 @@ exports.getDashboardData = async (req, res, next) => {
     const doctorId = doctor.doctor_id;
 
     // ========== 2. LẤY QUEUE HÔM NAY CỦA BÁC SĨ ==========
-    const queueQuery = `
-      SELECT 
-        a.id as appointment_id,
-        a.status,
-        qn.queue_number,
-        p.full_name as patient_name,
-        p.phone as patient_phone,
-        a.appointment_time
-      FROM appointments a
-      JOIN queue_numbers qn ON a.id = qn.appointment_id
-      JOIN users p ON a.patient_id = p.id
-      WHERE qn.doctor_id = ? 
-        AND qn.queue_date = ?
-        AND a.status != 'CANCELLED'
-      ORDER BY qn.queue_number ASC
-    `;
-
-    const [appointments] = await pool.execute(queueQuery, [doctorId, today]);
-
-    // Phân loại appointments
-    let current = null;
-    let next = null;
-    const upcoming = [];
-
-    for (const apt of appointments) {
-      const item = {
-        appointmentId: apt.appointment_id,
-        queueNumber: apt.queue_number,
-        patientName: apt.patient_name,
-        patientPhone: apt.patient_phone,
-        appointmentTime: apt.appointment_time,
-        status: apt.status
-      };
-
-      if (apt.status === 'IN_PROGRESS') {
-        current = item;
-      } else if (apt.status === 'CALLED' && !current) {
-        current = item;
-      } else if (apt.status === 'WAITING' && !next) {
-        next = item;
-      }
-
-      // Thêm vào danh sách sắp tới (WAITING, CALLED, IN_PROGRESS)
-      if (['WAITING', 'CALLED', 'IN_PROGRESS'].includes(apt.status)) {
-        upcoming.push(item);
-      }
-    }
-
-    // Sắp xếp upcoming theo queue number
-    upcoming.sort((a, b) => a.queueNumber - b.queueNumber);
+    // Dùng hàm getQueueStateInternal để đảm bảo logic tính toán giống với Admin Queue Dashboard
+    const queueState = await getQueueStateInternal(pool, doctorId, today);
+    
+    // Lấy thông tin từ queueState
+    const current = queueState.current;
+    const next = queueState.next;
+    // upcoming = tất cả appointments đang chờ (WAITING, CALLED, IN_PROGRESS)
+    const upcoming = queueState.appointments || [];
 
     // ========== 3. LẤY LỊCH HÔM NAY ==========
     const scheduleQuery = `

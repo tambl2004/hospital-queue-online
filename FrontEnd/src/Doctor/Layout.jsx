@@ -10,6 +10,7 @@ import {
   FaClipboardList,
   FaUser,
   FaStar,
+  FaBullhorn,
 } from 'react-icons/fa';
 
 const Layout = ({ children }) => {
@@ -20,7 +21,7 @@ const Layout = ({ children }) => {
 
   const menuItems = [
     { path: '/doctor/dashboard', label: 'Dashboard', icon: FaChartBar },
-    { path: '/doctor/queue', label: 'Theo dõi hàng chờ', icon: FaList },
+    { path: '/doctor/queue', label: 'Hàng đợi & Gọi số', icon: FaBullhorn },
     { path: '/doctor/appointments', label: 'Lịch khám của tôi', icon: FaClipboardList },
     { path: '/doctor/schedule', label: 'Lịch làm việc', icon: FaCalendarAlt },
     { path: '/doctor/profile', label: 'Hồ sơ', icon: FaUser },

@@ -2,10 +2,10 @@
 -- version 5.2.2
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: Jan 07, 2026 at 05:33 PM
--- Server version: 5.7.24
--- PHP Version: 8.3.1
+-- Máy chủ: localhost
+-- Thời gian đã tạo: Th1 08, 2026 lúc 09:15 AM
+-- Phiên bản máy phục vụ: 5.7.24
+-- Phiên bản PHP: 8.3.1
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,13 +18,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `benhvien`
+-- Cơ sở dữ liệu: `benhvien`
 --
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `appointments`
+-- Cấu trúc bảng cho bảng `appointments`
 --
 
 CREATE TABLE `appointments` (
@@ -41,10 +41,18 @@ CREATE TABLE `appointments` (
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `appointments`
+--
+
+INSERT INTO `appointments` (`id`, `patient_id`, `doctor_id`, `department_id`, `room_id`, `schedule_id`, `appointment_date`, `appointment_time`, `status`, `created_at`, `updated_at`) VALUES
+(1, 3, 1, 1, 1, 13, '2026-01-08', '08:00:00', 'DONE', '2026-01-08 08:33:13', '2026-01-08 08:56:49'),
+(2, 3, 1, 1, 1, 14, '2026-01-08', '08:15:00', 'CALLED', '2026-01-08 09:00:29', '2026-01-08 09:13:35');
+
 -- --------------------------------------------------------
 
 --
--- Table structure for table `departments`
+-- Cấu trúc bảng cho bảng `departments`
 --
 
 CREATE TABLE `departments` (
@@ -57,7 +65,7 @@ CREATE TABLE `departments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `departments`
+-- Đang đổ dữ liệu cho bảng `departments`
 --
 
 INSERT INTO `departments` (`id`, `name`, `description`, `is_active`, `created_at`, `updated_at`) VALUES
@@ -66,7 +74,7 @@ INSERT INTO `departments` (`id`, `name`, `description`, `is_active`, `created_at
 -- --------------------------------------------------------
 
 --
--- Table structure for table `doctors`
+-- Cấu trúc bảng cho bảng `doctors`
 --
 
 CREATE TABLE `doctors` (
@@ -82,10 +90,17 @@ CREATE TABLE `doctors` (
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `doctors`
+--
+
+INSERT INTO `doctors` (`id`, `user_id`, `department_id`, `room_id`, `experience_years`, `rating_avg`, `bio`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 2, 1, 1, 10, 5.00, 'kinh nghiệm bốc phét', 1, '2026-01-07 17:38:54', '2026-01-08 08:57:18');
+
 -- --------------------------------------------------------
 
 --
--- Table structure for table `doctor_schedules`
+-- Cấu trúc bảng cho bảng `doctor_schedules`
 --
 
 CREATE TABLE `doctor_schedules` (
@@ -99,10 +114,32 @@ CREATE TABLE `doctor_schedules` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `doctor_schedules`
+--
+
+INSERT INTO `doctor_schedules` (`id`, `doctor_id`, `work_date`, `start_time`, `end_time`, `max_patients`, `is_active`, `created_at`) VALUES
+(13, 1, '2026-01-08', '08:00:00', '08:15:00', 1, 1, '2026-01-08 08:29:52'),
+(14, 1, '2026-01-08', '08:15:00', '08:30:00', 1, 1, '2026-01-08 08:29:52'),
+(15, 1, '2026-01-08', '08:30:00', '08:45:00', 1, 1, '2026-01-08 08:29:52'),
+(16, 1, '2026-01-08', '08:45:00', '09:00:00', 1, 1, '2026-01-08 08:29:52'),
+(17, 1, '2026-01-08', '09:00:00', '09:15:00', 1, 1, '2026-01-08 08:29:52'),
+(18, 1, '2026-01-08', '09:15:00', '09:30:00', 1, 1, '2026-01-08 08:29:52'),
+(19, 1, '2026-01-08', '09:30:00', '09:45:00', 1, 1, '2026-01-08 08:29:52'),
+(20, 1, '2026-01-08', '09:45:00', '10:00:00', 1, 1, '2026-01-08 08:29:52'),
+(21, 1, '2026-01-08', '10:00:00', '10:15:00', 1, 1, '2026-01-08 08:29:52'),
+(22, 1, '2026-01-08', '10:15:00', '10:30:00', 1, 1, '2026-01-08 08:29:52'),
+(23, 1, '2026-01-08', '10:30:00', '10:45:00', 1, 1, '2026-01-08 08:29:52'),
+(24, 1, '2026-01-08', '10:45:00', '11:00:00', 1, 1, '2026-01-08 08:29:52'),
+(25, 1, '2026-01-08', '11:00:00', '11:15:00', 1, 1, '2026-01-08 08:29:52'),
+(26, 1, '2026-01-08', '11:15:00', '11:30:00', 1, 1, '2026-01-08 08:29:52'),
+(27, 1, '2026-01-08', '11:30:00', '11:45:00', 1, 1, '2026-01-08 08:29:52'),
+(28, 1, '2026-01-08', '11:45:00', '12:00:00', 1, 1, '2026-01-08 08:29:52');
+
 -- --------------------------------------------------------
 
 --
--- Table structure for table `queue_numbers`
+-- Cấu trúc bảng cho bảng `queue_numbers`
 --
 
 CREATE TABLE `queue_numbers` (
@@ -114,10 +151,18 @@ CREATE TABLE `queue_numbers` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `queue_numbers`
+--
+
+INSERT INTO `queue_numbers` (`id`, `appointment_id`, `doctor_id`, `queue_date`, `queue_number`, `created_at`) VALUES
+(1, 1, 1, '2026-01-08', 1, '2026-01-08 08:33:13'),
+(2, 2, 1, '2026-01-08', 2, '2026-01-08 09:00:29');
+
 -- --------------------------------------------------------
 
 --
--- Table structure for table `ratings`
+-- Cấu trúc bảng cho bảng `ratings`
 --
 
 CREATE TABLE `ratings` (
@@ -131,7 +176,14 @@ CREATE TABLE `ratings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Triggers `ratings`
+-- Đang đổ dữ liệu cho bảng `ratings`
+--
+
+INSERT INTO `ratings` (`id`, `appointment_id`, `doctor_id`, `patient_id`, `rating`, `comment`, `created_at`) VALUES
+(1, 1, 1, 3, 5, NULL, '2026-01-08 08:57:18');
+
+--
+-- Bẫy `ratings`
 --
 DELIMITER $$
 CREATE TRIGGER `update_doctor_rating_avg` AFTER INSERT ON `ratings` FOR EACH ROW BEGIN
@@ -161,29 +213,29 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Table structure for table `roles`
+-- Cấu trúc bảng cho bảng `roles`
 --
 
 CREATE TABLE `roles` (
   `id` int(11) NOT NULL,
-  `code` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ADMIN, DOCTOR, PATIENT',
+  `code` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ADMIN, STAFF, PATIENT, DOCTOR',
   `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `roles`
+-- Đang đổ dữ liệu cho bảng `roles`
 --
 
 INSERT INTO `roles` (`id`, `code`, `name`, `created_at`) VALUES
 (1, 'ADMIN', 'Quản trị viên', '2026-01-07 15:53:14'),
-(2, 'DOCTOR', 'Bác sĩ', '2026-01-07 15:53:14'),
-(3, 'PATIENT', 'Bệnh nhân', '2026-01-07 15:53:14');
+(3, 'DOCTOR', 'Bác sĩ', '2026-01-07 15:53:14'),
+(4, 'PATIENT', 'Bệnh nhân', '2026-01-07 15:53:14');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `rooms`
+-- Cấu trúc bảng cho bảng `rooms`
 --
 
 CREATE TABLE `rooms` (
@@ -196,7 +248,7 @@ CREATE TABLE `rooms` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `rooms`
+-- Đang đổ dữ liệu cho bảng `rooms`
 --
 
 INSERT INTO `rooms` (`id`, `room_code`, `room_name`, `department_id`, `is_active`, `created_at`) VALUES
@@ -205,7 +257,7 @@ INSERT INTO `rooms` (`id`, `room_code`, `room_name`, `department_id`, `is_active
 -- --------------------------------------------------------
 
 --
--- Table structure for table `users`
+-- Cấu trúc bảng cho bảng `users`
 --
 
 CREATE TABLE `users` (
@@ -222,16 +274,18 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `users`
+-- Đang đổ dữ liệu cho bảng `users`
 --
 
 INSERT INTO `users` (`id`, `full_name`, `email`, `password_hash`, `phone`, `gender`, `date_of_birth`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'Admin', 'admin@gmail.com', '$2a$12$qEbicBaKZ3gY9LyiDn/SD.tQ/TXUo3pLRtYTNFX.1CuvfVFVbbrIO', '0969859400', 'MALE', '2004-02-19', 1, '2026-01-07 16:08:55', '2026-01-07 16:08:55');
+(1, 'Admin', 'admin@gmail.com', '$2a$12$qEbicBaKZ3gY9LyiDn/SD.tQ/TXUo3pLRtYTNFX.1CuvfVFVbbrIO', '0969859400', 'MALE', '2004-02-19', 1, '2026-01-07 16:08:55', '2026-01-07 16:08:55'),
+(2, 'Bác sĩ Tâm', 'bacsi@gmail.com', '$2a$12$iwin9jtCaIuEj75GVFWA1.XVhl4butFrXjyQr09tPS70huFa/IubK', '0335974080', 'MALE', '2004-02-18', 1, '2026-01-07 17:38:54', '2026-01-07 18:02:58'),
+(3, 'Tâm', 'tam@gmail.com', '$2a$12$oNx5x0Kh99zy0Vaj8oC0iOZyoTXKA/mgqUVpgN1wqgZLP3EwOt4Y2', '0335974080', 'MALE', '2004-02-19', 1, '2026-01-07 17:39:36', '2026-01-07 17:39:36');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `user_roles`
+-- Cấu trúc bảng cho bảng `user_roles`
 --
 
 CREATE TABLE `user_roles` (
@@ -240,16 +294,18 @@ CREATE TABLE `user_roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `user_roles`
+-- Đang đổ dữ liệu cho bảng `user_roles`
 --
 
 INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
-(1, 1);
+(1, 1),
+(2, 3),
+(3, 4);
 
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `v_appointments_detail`
+-- Cấu trúc đóng vai cho view `v_appointments_detail`
 -- (See below for the actual view)
 --
 CREATE TABLE `v_appointments_detail` (
@@ -279,7 +335,7 @@ CREATE TABLE `v_appointments_detail` (
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `v_doctors_info`
+-- Cấu trúc đóng vai cho view `v_doctors_info`
 -- (See below for the actual view)
 --
 CREATE TABLE `v_doctors_info` (
@@ -301,11 +357,11 @@ CREATE TABLE `v_doctors_info` (
 );
 
 --
--- Indexes for dumped tables
+-- Chỉ mục cho các bảng đã đổ
 --
 
 --
--- Indexes for table `appointments`
+-- Chỉ mục cho bảng `appointments`
 --
 ALTER TABLE `appointments`
   ADD PRIMARY KEY (`id`),
@@ -320,7 +376,7 @@ ALTER TABLE `appointments`
   ADD KEY `idx_created_at` (`created_at`);
 
 --
--- Indexes for table `departments`
+-- Chỉ mục cho bảng `departments`
 --
 ALTER TABLE `departments`
   ADD PRIMARY KEY (`id`),
@@ -329,7 +385,7 @@ ALTER TABLE `departments`
   ADD KEY `idx_is_active` (`is_active`);
 
 --
--- Indexes for table `doctors`
+-- Chỉ mục cho bảng `doctors`
 --
 ALTER TABLE `doctors`
   ADD PRIMARY KEY (`id`),
@@ -341,7 +397,7 @@ ALTER TABLE `doctors`
   ADD KEY `idx_rating_avg` (`rating_avg`);
 
 --
--- Indexes for table `doctor_schedules`
+-- Chỉ mục cho bảng `doctor_schedules`
 --
 ALTER TABLE `doctor_schedules`
   ADD PRIMARY KEY (`id`),
@@ -352,7 +408,7 @@ ALTER TABLE `doctor_schedules`
   ADD KEY `idx_is_active` (`is_active`);
 
 --
--- Indexes for table `queue_numbers`
+-- Chỉ mục cho bảng `queue_numbers`
 --
 ALTER TABLE `queue_numbers`
   ADD PRIMARY KEY (`id`),
@@ -365,7 +421,7 @@ ALTER TABLE `queue_numbers`
   ADD KEY `idx_queue_number` (`queue_number`);
 
 --
--- Indexes for table `ratings`
+-- Chỉ mục cho bảng `ratings`
 --
 ALTER TABLE `ratings`
   ADD PRIMARY KEY (`id`),
@@ -377,7 +433,7 @@ ALTER TABLE `ratings`
   ADD KEY `idx_created_at` (`created_at`);
 
 --
--- Indexes for table `roles`
+-- Chỉ mục cho bảng `roles`
 --
 ALTER TABLE `roles`
   ADD PRIMARY KEY (`id`),
@@ -385,7 +441,7 @@ ALTER TABLE `roles`
   ADD KEY `idx_code` (`code`);
 
 --
--- Indexes for table `rooms`
+-- Chỉ mục cho bảng `rooms`
 --
 ALTER TABLE `rooms`
   ADD PRIMARY KEY (`id`),
@@ -395,7 +451,7 @@ ALTER TABLE `rooms`
   ADD KEY `idx_is_active` (`is_active`);
 
 --
--- Indexes for table `users`
+-- Chỉ mục cho bảng `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
@@ -405,7 +461,7 @@ ALTER TABLE `users`
   ADD KEY `idx_is_active` (`is_active`);
 
 --
--- Indexes for table `user_roles`
+-- Chỉ mục cho bảng `user_roles`
 --
 ALTER TABLE `user_roles`
   ADD PRIMARY KEY (`user_id`,`role_id`),
@@ -413,67 +469,67 @@ ALTER TABLE `user_roles`
   ADD KEY `idx_role_id` (`role_id`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- AUTO_INCREMENT cho các bảng đã đổ
 --
 
 --
--- AUTO_INCREMENT for table `appointments`
+-- AUTO_INCREMENT cho bảng `appointments`
 --
 ALTER TABLE `appointments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `departments`
+-- AUTO_INCREMENT cho bảng `departments`
 --
 ALTER TABLE `departments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `doctors`
+-- AUTO_INCREMENT cho bảng `doctors`
 --
 ALTER TABLE `doctors`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `doctor_schedules`
+-- AUTO_INCREMENT cho bảng `doctor_schedules`
 --
 ALTER TABLE `doctor_schedules`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
--- AUTO_INCREMENT for table `queue_numbers`
+-- AUTO_INCREMENT cho bảng `queue_numbers`
 --
 ALTER TABLE `queue_numbers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `ratings`
+-- AUTO_INCREMENT cho bảng `ratings`
 --
 ALTER TABLE `ratings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `roles`
+-- AUTO_INCREMENT cho bảng `roles`
 --
 ALTER TABLE `roles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT for table `rooms`
+-- AUTO_INCREMENT cho bảng `rooms`
 --
 ALTER TABLE `rooms`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `users`
+-- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 -- --------------------------------------------------------
 
 --
--- Structure for view `v_appointments_detail`
+-- Cấu trúc cho view `v_appointments_detail`
 --
 DROP TABLE IF EXISTS `v_appointments_detail`;
 
@@ -482,18 +538,18 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- --------------------------------------------------------
 
 --
--- Structure for view `v_doctors_info`
+-- Cấu trúc cho view `v_doctors_info`
 --
 DROP TABLE IF EXISTS `v_doctors_info`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_doctors_info`  AS SELECT `d`.`id` AS `id`, `d`.`user_id` AS `user_id`, `u`.`full_name` AS `full_name`, `u`.`email` AS `email`, `u`.`phone` AS `phone`, `u`.`gender` AS `gender`, `d`.`department_id` AS `department_id`, `dept`.`name` AS `department_name`, `d`.`room_id` AS `room_id`, `r`.`room_name` AS `room_name`, `d`.`experience_years` AS `experience_years`, `d`.`rating_avg` AS `rating_avg`, `d`.`bio` AS `bio`, `d`.`is_active` AS `is_active`, `d`.`created_at` AS `created_at` FROM (((`doctors` `d` join `users` `u` on((`d`.`user_id` = `u`.`id`))) join `departments` `dept` on((`d`.`department_id` = `dept`.`id`))) left join `rooms` `r` on((`d`.`room_id` = `r`.`id`))) ;
 
 --
--- Constraints for dumped tables
+-- Ràng buộc đối với các bảng kết xuất
 --
 
 --
--- Constraints for table `appointments`
+-- Ràng buộc cho bảng `appointments`
 --
 ALTER TABLE `appointments`
   ADD CONSTRAINT `appointments_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `users` (`id`),
@@ -503,7 +559,7 @@ ALTER TABLE `appointments`
   ADD CONSTRAINT `appointments_ibfk_5` FOREIGN KEY (`schedule_id`) REFERENCES `doctor_schedules` (`id`);
 
 --
--- Constraints for table `doctors`
+-- Ràng buộc cho bảng `doctors`
 --
 ALTER TABLE `doctors`
   ADD CONSTRAINT `doctors_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
@@ -511,20 +567,20 @@ ALTER TABLE `doctors`
   ADD CONSTRAINT `doctors_ibfk_3` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `doctor_schedules`
+-- Ràng buộc cho bảng `doctor_schedules`
 --
 ALTER TABLE `doctor_schedules`
   ADD CONSTRAINT `doctor_schedules_ibfk_1` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `queue_numbers`
+-- Ràng buộc cho bảng `queue_numbers`
 --
 ALTER TABLE `queue_numbers`
   ADD CONSTRAINT `queue_numbers_ibfk_1` FOREIGN KEY (`appointment_id`) REFERENCES `appointments` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `queue_numbers_ibfk_2` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `ratings`
+-- Ràng buộc cho bảng `ratings`
 --
 ALTER TABLE `ratings`
   ADD CONSTRAINT `ratings_ibfk_1` FOREIGN KEY (`appointment_id`) REFERENCES `appointments` (`id`) ON DELETE CASCADE,
@@ -532,13 +588,13 @@ ALTER TABLE `ratings`
   ADD CONSTRAINT `ratings_ibfk_3` FOREIGN KEY (`patient_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `rooms`
+-- Ràng buộc cho bảng `rooms`
 --
 ALTER TABLE `rooms`
   ADD CONSTRAINT `rooms_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`);
 
 --
--- Constraints for table `user_roles`
+-- Ràng buộc cho bảng `user_roles`
 --
 ALTER TABLE `user_roles`
   ADD CONSTRAINT `user_roles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,

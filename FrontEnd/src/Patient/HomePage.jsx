@@ -145,11 +145,11 @@ function HomePage() {
                         {doctor.full_name}
                       </h3>
                       <p className="text-sm text-gray-600 mb-2">{doctor.department?.name}</p>
-                      {doctor.rating_avg > 0 && (
+                      {doctor.rating_avg != null && Number(doctor.rating_avg) > 0 && (
                         <div className="flex items-center gap-1">
                           <FaStar className="text-yellow-400 text-sm" />
                           <span className="text-sm font-medium text-gray-700">
-                            {doctor.rating_avg.toFixed(1)}
+                            {Number(doctor.rating_avg).toFixed(1)}
                           </span>
                         </div>
                       )}

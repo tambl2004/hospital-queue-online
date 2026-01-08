@@ -343,7 +343,7 @@ const AdminDoctorList = () => {
                           <div className="flex items-center gap-1">
                             <FaStar className="text-yellow-400" />
                             <span className="text-sm font-medium text-gray-900">
-                              {doctor.rating_avg ? doctor.rating_avg.toFixed(1) : '0.0'}
+                              {doctor.rating_avg != null ? Number(doctor.rating_avg).toFixed(1) : '0.0'}
                             </span>
                           </div>
                         </td>

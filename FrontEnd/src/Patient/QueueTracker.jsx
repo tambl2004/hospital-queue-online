@@ -86,8 +86,22 @@ function QueueTracker() {
       }
 
       // 2. Kết nối Socket.IO và join room
-      const doctorId = appt.doctor_id;
-      const date = appt.appointment_date;
+      const doctorId = appt.doctor_id || appt.doctor?.id;
+      // Format date thành YYYY-MM-DD (backend yêu cầu format này)
+      let date = appt.appointment_date;
+      if (date) {
+        // Nếu date là ISO datetime string, extract chỉ phần date
+        if (date.includes('T')) {
+          date = date.split('T')[0];
+        } else if (date.includes(' ')) {
+          date = date.split(' ')[0];
+        }
+        // Đảm bảo format là YYYY-MM-DD
+        const dateObj = new Date(date);
+        if (!isNaN(dateObj.getTime())) {
+          date = dateObj.toISOString().split('T')[0];
+        }
+      }
 
       if (!doctorId || !date) {
         setError('Thông tin lịch khám không đầy đủ');
@@ -149,9 +163,13 @@ function QueueTracker() {
 
   const handleQueueUpdate = (data) => {
     console.log('[QueueTracker] Received queue update:', data);
+    console.log('[QueueTracker] Current appointment:', appointment);
+    console.log('[QueueTracker] Current appointmentId:', appointmentId);
     
     if (data && data.context) {
       processQueueState(data);
+    } else {
+      console.warn('[QueueTracker] Received invalid queue update data:', data);
     }
   };
 
@@ -162,6 +180,7 @@ function QueueTracker() {
   };
 
   const processQueueState = (queueData) => {
+    console.log('[QueueTracker] Processing queue state:', queueData);
     setQueueState(queueData);
     setSocketConnected(true);
 
@@ -173,15 +192,39 @@ function QueueTracker() {
         ...(queueData.appointments || []),
       ];
 
+      console.log('[QueueTracker] All appointments in queue:', allAppointments);
+      console.log('[QueueTracker] Looking for appointmentId:', appointmentId);
+
       const myAppointment = allAppointments.find(
         (apt) => apt.appointmentId === parseInt(appointmentId)
       );
 
-      if (myAppointment && appointment) {
-        setAppointment((prev) => ({
-          ...prev,
-          status: myAppointment.status,
-        }));
+      console.log('[QueueTracker] Found my appointment:', myAppointment);
+      console.log('[QueueTracker] Current appointment status:', appointment?.status);
+
+      if (myAppointment) {
+        const newStatus = myAppointment.status;
+        console.log('[QueueTracker] Updating appointment status from', appointment?.status, 'to', newStatus);
+        
+        setAppointment((prev) => {
+          if (!prev) {
+            console.warn('[QueueTracker] No previous appointment state to update');
+            return prev;
+          }
+          
+          if (prev.status !== newStatus) {
+            console.log('[QueueTracker] Status changed! Updating...');
+            return {
+              ...prev,
+              status: newStatus,
+            };
+          } else {
+            console.log('[QueueTracker] Status unchanged, skipping update');
+            return prev;
+          }
+        });
+      } else {
+        console.warn('[QueueTracker] My appointment not found in queue data');
       }
     }
   };
@@ -260,7 +303,20 @@ function QueueTracker() {
   const aheadCount = calculateAheadCount();
   const estimatedMinutes = calculateEstimatedMinutes();
   const queueList = getQueueList();
-  const currentQueue = queueState?.current || queueState?.inProgress;
+  
+  // Lấy currentQueue - ưu tiên inProgress, sau đó current
+  // Nếu appointment của bệnh nhân đang IN_PROGRESS, hiển thị số của họ
+  let currentQueue = queueState?.inProgress || queueState?.current;
+  
+  // Nếu appointment của bệnh nhân đang IN_PROGRESS và là current, hiển thị số của họ
+  if (appointment?.status === 'IN_PROGRESS' && appointment?.queue_number) {
+    const myAppointmentInQueue = queueList.find(
+      (apt) => apt.appointmentId === parseInt(appointmentId) && apt.status === 'IN_PROGRESS'
+    );
+    if (myAppointmentInQueue) {
+      currentQueue = myAppointmentInQueue;
+    }
+  }
 
   return (
     <div className="max-w-4xl mx-auto">

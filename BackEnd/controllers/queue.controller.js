@@ -14,6 +14,36 @@ const { getPool } = require('../config/database');
  */
 
 /**
+ * Helper: Normalize date để đảm bảo format nhất quán (YYYY-MM-DD)
+ */
+function normalizeDate(dateValue) {
+  try {
+    if (!dateValue) return '';
+    
+    // Nếu là Date object, convert sang string
+    if (dateValue instanceof Date) {
+      return dateValue.toISOString().split('T')[0];
+    }
+    
+    // Convert sang string nếu chưa phải
+    const dateStr = String(dateValue);
+    
+    // Nếu là ISO datetime string, extract chỉ phần date
+    if (dateStr.includes('T')) {
+      return dateStr.split('T')[0];
+    }
+    // Nếu có space, lấy phần đầu
+    if (dateStr.includes(' ')) {
+      return dateStr.split(' ')[0];
+    }
+    return dateStr;
+  } catch (err) {
+    console.error('Error normalizing date:', err, dateValue);
+    return String(dateValue || '');
+  }
+}
+
+/**
  * Lấy trạng thái queue theo doctor + date
  * GET /api/queue/state
  */
@@ -74,7 +104,38 @@ exports.getQueueState = async (req, res, next) => {
 
       const appointment = appointments[0];
       
-      if (appointment.doctor_id !== parseInt(doctor_id) || appointment.appointment_date !== date) {
+      // Normalize date để so sánh (chỉ lấy phần YYYY-MM-DD)
+      const normalizeDate = (dateValue) => {
+        try {
+          if (!dateValue) return '';
+          
+          // Nếu là Date object, convert sang string
+          if (dateValue instanceof Date) {
+            return dateValue.toISOString().split('T')[0];
+          }
+          
+          // Convert sang string nếu chưa phải
+          const dateStr = String(dateValue);
+          
+          // Nếu là ISO datetime string, extract chỉ phần date
+          if (dateStr.includes('T')) {
+            return dateStr.split('T')[0];
+          }
+          // Nếu có space, lấy phần đầu
+          if (dateStr.includes(' ')) {
+            return dateStr.split(' ')[0];
+          }
+          return dateStr;
+        } catch (err) {
+          console.error('Error normalizing date:', err, dateValue);
+          return String(dateValue || '');
+        }
+      };
+      
+      const appointmentDate = normalizeDate(appointment.appointment_date);
+      const requestedDate = normalizeDate(date);
+      
+      if (appointment.doctor_id !== parseInt(doctor_id) || appointmentDate !== requestedDate) {
         return res.status(403).json({
           success: false,
           message: 'Thông tin lịch khám không khớp'
@@ -244,12 +305,21 @@ exports.callNext = async (req, res, next) => {
 
     // Lấy lại queue state để emit
     const io = req.app.get('io');
-    const queueState = await getQueueStateInternal(pool, doctor_id, date);
+    const normalizedDate = normalizeDate(date);
+    const queueState = await getQueueStateInternal(pool, doctor_id, normalizedDate);
 
     // Emit realtime update
     if (io) {
-      const roomKey = `queue:${doctor_id}:${date}`;
+      const roomKey = `queue:${doctor_id}:${normalizedDate}`;
+      console.log(`[Queue Controller] Emitting queue:updated to room: ${roomKey} (original date: ${date}, normalized: ${normalizedDate})`);
       io.to(roomKey).emit('queue:updated', queueState);
+      const roomSize = io.sockets.adapter.rooms.get(roomKey)?.size || 0;
+      console.log(`[Queue Controller] Emitted queue:updated, room has ${roomSize} clients`);
+      if (roomSize === 0) {
+        console.warn(`[Queue Controller] WARNING: Room ${roomKey} has no clients!`);
+      }
+    } else {
+      console.warn('[Queue Controller] io is not available, cannot emit realtime update');
     }
 
     res.json({
@@ -349,7 +419,11 @@ exports.startAppointment = async (req, res, next) => {
     const io = req.app.get('io');
     if (io) {
       const roomKey = `queue:${doctor_id}:${date}`;
+      console.log(`[Queue Controller] Emitting queue:updated to room: ${roomKey}`);
       io.to(roomKey).emit('queue:updated', queueState);
+      console.log(`[Queue Controller] Emitted queue:updated, room has ${io.sockets.adapter.rooms.get(roomKey)?.size || 0} clients`);
+    } else {
+      console.warn('[Queue Controller] io is not available, cannot emit realtime update');
     }
 
     res.json({
@@ -429,7 +503,11 @@ exports.finishAppointment = async (req, res, next) => {
     const io = req.app.get('io');
     if (io) {
       const roomKey = `queue:${doctor_id}:${date}`;
+      console.log(`[Queue Controller] Emitting queue:updated to room: ${roomKey}`);
       io.to(roomKey).emit('queue:updated', queueState);
+      console.log(`[Queue Controller] Emitted queue:updated, room has ${io.sockets.adapter.rooms.get(roomKey)?.size || 0} clients`);
+    } else {
+      console.warn('[Queue Controller] io is not available, cannot emit realtime update');
     }
 
     res.json({
@@ -509,7 +587,11 @@ exports.skipAppointment = async (req, res, next) => {
     const io = req.app.get('io');
     if (io) {
       const roomKey = `queue:${doctor_id}:${date}`;
+      console.log(`[Queue Controller] Emitting queue:updated to room: ${roomKey}`);
       io.to(roomKey).emit('queue:updated', queueState);
+      console.log(`[Queue Controller] Emitted queue:updated, room has ${io.sockets.adapter.rooms.get(roomKey)?.size || 0} clients`);
+    } else {
+      console.warn('[Queue Controller] io is not available, cannot emit realtime update');
     }
 
     res.json({
@@ -589,7 +671,11 @@ exports.recallAppointment = async (req, res, next) => {
     const io = req.app.get('io');
     if (io) {
       const roomKey = `queue:${doctor_id}:${date}`;
+      console.log(`[Queue Controller] Emitting queue:updated to room: ${roomKey}`);
       io.to(roomKey).emit('queue:updated', queueState);
+      console.log(`[Queue Controller] Emitted queue:updated, room has ${io.sockets.adapter.rooms.get(roomKey)?.size || 0} clients`);
+    } else {
+      console.warn('[Queue Controller] io is not available, cannot emit realtime update');
     }
 
     res.json({

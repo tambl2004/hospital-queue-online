@@ -2,12 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 import Layout from './Layout';
 import { doctorService } from '../services/doctorService';
 import { queueService, connectQueueSocket, joinQueueRoom, leaveQueueRoom, disconnectQueueSocket } from '../services/queueService';
+import StatCard from '../components/Admin/StatCard';
 import {
   FaSync,
-  FaUser,
-  FaPhone,
-  FaClock,
+  FaPlay,
+  FaStop,
+  FaStepForward,
+  FaTimes,
+  FaUndo,
   FaCheckCircle,
+  FaClock,
   FaExclamationCircle,
 } from 'react-icons/fa';
 
@@ -29,25 +33,6 @@ const DoctorQueue = () => {
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);
-
-  // Status labels
-  const statusLabels = {
-    WAITING: 'Chờ gọi',
-    CALLED: 'Đã gọi',
-    IN_PROGRESS: 'Đang khám',
-    DONE: 'Hoàn thành',
-    CANCELLED: 'Đã huỷ',
-    SKIPPED: 'Bỏ qua'
-  };
-
-  const statusColors = {
-    WAITING: 'bg-yellow-100 text-yellow-800',
-    CALLED: 'bg-blue-100 text-blue-800',
-    IN_PROGRESS: 'bg-purple-100 text-purple-800',
-    DONE: 'bg-green-100 text-green-800',
-    CANCELLED: 'bg-red-100 text-red-800',
-    SKIPPED: 'bg-gray-100 text-gray-800'
-  };
 
   // Fetch doctor info and queue state
   const fetchData = useCallback(async () => {
@@ -118,23 +103,102 @@ const DoctorQueue = () => {
     fetchData();
   };
 
-  // Handle finish appointment
-  const handleFinishAppointment = async (appointmentId) => {
-    if (!confirm('Bạn có chắc chắn muốn đánh dấu hoàn thành khám cho bệnh nhân này?')) {
-      return;
-    }
+  // ========== ACTIONS ==========
+  const handleCallNext = async () => {
+    if (!doctorInfo?.doctor_id) return;
 
     setActionLoading(true);
     try {
       const today = new Date().toISOString().split('T')[0];
-      await doctorService.finishAppointment(appointmentId, doctorInfo.doctor_id, today);
-      // Refresh data
-      await fetchData();
+      await queueService.callNext(doctorInfo.doctor_id, today);
+      // State sẽ được cập nhật qua socket
     } catch (err) {
-      setError(err.response?.data?.message || 'Không thể hoàn thành khám');
+      setError(err.response?.data?.message || 'Không thể gọi số tiếp theo');
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleStart = async (appointmentId) => {
+    if (!doctorInfo?.doctor_id) return;
+
+    setActionLoading(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      await queueService.startAppointment(appointmentId, doctorInfo.doctor_id, today);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Không thể bắt đầu khám');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleFinish = async (appointmentId) => {
+    if (!doctorInfo?.doctor_id) return;
+
+    setActionLoading(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      await queueService.finishAppointment(appointmentId, doctorInfo.doctor_id, today);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Không thể kết thúc khám');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSkip = async (appointmentId) => {
+    if (!doctorInfo?.doctor_id) return;
+    if (!confirm('Bạn có chắc chắn muốn bỏ qua số này?')) return;
+
+    setActionLoading(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      await queueService.skipAppointment(appointmentId, doctorInfo.doctor_id, today);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Không thể bỏ qua số');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRecall = async (appointmentId) => {
+    if (!doctorInfo?.doctor_id) return;
+
+    setActionLoading(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      await queueService.recallAppointment(appointmentId, doctorInfo.doctor_id, today);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Không thể gọi lại số');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ========== HELPER FUNCTIONS ==========
+  const getStatusBadge = (status) => {
+    const badges = {
+      WAITING: 'bg-yellow-100 text-yellow-800',
+      CALLED: 'bg-blue-100 text-blue-800',
+      IN_PROGRESS: 'bg-purple-100 text-purple-800',
+      DONE: 'bg-green-100 text-green-800',
+      SKIPPED: 'bg-gray-100 text-gray-800',
+      CANCELLED: 'bg-red-100 text-red-800'
+    };
+    return badges[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getStatusText = (status) => {
+    const texts = {
+      WAITING: 'Chờ gọi',
+      CALLED: 'Đã gọi',
+      IN_PROGRESS: 'Đang khám',
+      DONE: 'Hoàn thành',
+      SKIPPED: 'Bỏ qua',
+      CANCELLED: 'Đã huỷ'
+    };
+    return texts[status] || status;
   };
 
   // Combine all queue items
@@ -169,8 +233,8 @@ const DoctorQueue = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Theo dõi hàng chờ</h1>
-           
+            <h1 className="text-3xl font-bold text-gray-800">Hàng đợi & Gọi số</h1>
+            <p className="text-gray-600 mt-1">Theo dõi và quản lý hàng đợi hôm nay</p>
           </div>
           <div className="flex items-center gap-3">
             {lastRefresh && (
@@ -180,11 +244,11 @@ const DoctorQueue = () => {
             )}
             <button
               onClick={handleRefresh}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+              disabled={!doctorInfo?.doctor_id || loading}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               <FaSync className={loading ? 'animate-spin' : ''} />
-              Làm mới
+              Tải lại
             </button>
           </div>
         </div>
@@ -200,66 +264,86 @@ const DoctorQueue = () => {
         {/* Summary Cards */}
         {queueState && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <FaUser className="text-blue-600 text-xl" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Số hiện tại</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {queueState.current ? `#${queueState.current.queueNumber}` : '--'}
-                  </p>
-                </div>
-              </div>
-              {queueState.current && (
-                <p className="text-sm text-gray-600 mt-2">{queueState.current.patientName}</p>
+            <StatCard
+              title="Số hiện tại"
+              value={queueState.current ? `#${queueState.current.queueNumber}` : '--'}
+              subtitle={queueState.current ? queueState.current.patientName : 'Chưa có'}
+              icon={FaPlay}
+              iconColor={queueState.current ? 'bg-green-500' : 'bg-gray-400'}
+            />
+
+            <StatCard
+              title="Số tiếp theo"
+              value={queueState.next ? `#${queueState.next.queueNumber}` : '--'}
+              subtitle={queueState.next ? queueState.next.patientName : 'Hết số'}
+              icon={FaStepForward}
+              iconColor={queueState.next ? 'bg-blue-500' : 'bg-gray-400'}
+            />
+
+            <StatCard
+              title="Đang chờ"
+              value={queueState.waitingCount || 0}
+              subtitle="Bệnh nhân chờ gọi"
+              icon={FaClock}
+              iconColor="bg-yellow-500"
+            />
+
+            <StatCard
+              title="Đã xong"
+              value={queueState.doneCount || 0}
+              subtitle="Khám hoàn thành"
+              icon={FaCheckCircle}
+              iconColor="bg-indigo-500"
+            />
+          </div>
+        )}
+
+        {/* Thao tác nhanh */}
+        {queueState && (
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Thao tác nhanh</h2>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleCallNext}
+                disabled={!queueState.next || actionLoading}
+                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold"
+              >
+                <FaStepForward />
+                Gọi số tiếp theo
+              </button>
+
+              {queueState.current && queueState.current.status === 'CALLED' && (
+                <button
+                  onClick={() => handleStart(queueState.current.appointmentId)}
+                  disabled={actionLoading}
+                  className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  <FaPlay />
+                  Bắt đầu khám
+                </button>
               )}
-            </div>
 
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <FaClock className="text-green-600 text-xl" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Số tiếp theo</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {queueState.next ? `#${queueState.next.queueNumber}` : '--'}
-                  </p>
-                </div>
-              </div>
-              {queueState.next && (
-                <p className="text-sm text-gray-600 mt-2">{queueState.next.patientName}</p>
+              {queueState.current && queueState.current.status === 'CALLED' && (
+                <button
+                  onClick={() => handleSkip(queueState.current.appointmentId)}
+                  disabled={actionLoading}
+                  className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  <FaTimes />
+                  Bỏ qua
+                </button>
               )}
-            </div>
 
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <FaClock className="text-yellow-600 text-xl" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Đang chờ</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {queueState.waitingCount || 0}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <FaCheckCircle className="text-green-600 text-xl" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Đã xong</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {queueState.doneCount || 0}
-                  </p>
-                </div>
-              </div>
+              {queueState.inProgress && (
+                <button
+                  onClick={() => handleFinish(queueState.inProgress.appointmentId)}
+                  disabled={actionLoading}
+                  className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  <FaStop />
+                  Kết thúc khám
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -291,7 +375,7 @@ const DoctorQueue = () => {
                         queueState.current?.appointmentId === item.appointmentId
                           ? 'bg-blue-50'
                           : queueState.inProgress?.appointmentId === item.appointmentId
-                          ? 'bg-purple-50'
+                          ? 'bg-green-50'
                           : ''
                       }`}
                     >
@@ -301,33 +385,70 @@ const DoctorQueue = () => {
                       <td className="py-3 px-4">
                         <div>
                           <div className="font-medium text-gray-800">{item.patientName}</div>
-                          <div className="text-sm text-gray-500 flex items-center gap-1">
-                            <FaPhone className="text-xs" />
-                            {item.patientPhone}
-                          </div>
+                          <div className="text-sm text-gray-500">{item.patientPhone}</div>
                         </div>
                       </td>
                       <td className="py-3 px-4 text-gray-600">
                         {item.appointmentTime || '--'}
                       </td>
                       <td className="py-3 px-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          statusColors[item.status] || 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {statusLabels[item.status] || item.status}
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(item.status)}`}>
+                          {getStatusText(item.status)}
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        {item.status === 'IN_PROGRESS' && (
-                          <button
-                            onClick={() => handleFinishAppointment(item.appointmentId)}
-                            disabled={actionLoading}
-                            className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                            title="Hoàn thành khám"
-                          >
-                            Hoàn thành
-                          </button>
-                        )}
+                        <div className="flex gap-2">
+                          {item.status === 'WAITING' && (
+                            <button
+                              onClick={handleCallNext}
+                              disabled={queueState.next?.appointmentId !== item.appointmentId || actionLoading}
+                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                              title="Gọi số này"
+                            >
+                              Gọi
+                            </button>
+                          )}
+                          {item.status === 'CALLED' && (
+                            <>
+                              <button
+                                onClick={() => handleStart(item.appointmentId)}
+                                disabled={actionLoading}
+                                className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                title="Bắt đầu khám"
+                              >
+                                Bắt đầu
+                              </button>
+                              <button
+                                onClick={() => handleSkip(item.appointmentId)}
+                                disabled={actionLoading}
+                                className="px-3 py-1 bg-orange-600 text-white text-sm rounded hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                title="Bỏ qua"
+                              >
+                                Bỏ qua
+                              </button>
+                            </>
+                          )}
+                          {item.status === 'IN_PROGRESS' && (
+                            <button
+                              onClick={() => handleFinish(item.appointmentId)}
+                              disabled={actionLoading}
+                              className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                              title="Kết thúc khám"
+                            >
+                              Kết thúc
+                            </button>
+                          )}
+                          {item.status === 'SKIPPED' && (
+                            <button
+                              onClick={() => handleRecall(item.appointmentId)}
+                              disabled={actionLoading}
+                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                              title="Gọi lại"
+                            >
+                              Gọi lại
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
