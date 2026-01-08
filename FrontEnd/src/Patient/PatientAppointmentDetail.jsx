@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { patientService } from '../services/patientService';
 import CancelAppointmentModal from '../components/Patient/CancelAppointmentModal';
+import RateDoctorButton from './RateDoctorButton';
+import DoctorRatingModal from './DoctorRatingModal';
+import MyRatingView from './MyRatingView';
 import { FaUserMd, FaCalendarAlt, FaClock, FaArrowLeft, FaEye, FaTimes, FaListOl, FaDoorOpen, FaHospital } from 'react-icons/fa';
 
 function PatientAppointmentDetail() {
@@ -11,9 +14,15 @@ function PatientAppointmentDetail() {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [rating, setRating] = useState(null);
+  const [loadingRating, setLoadingRating] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [submittingRating, setSubmittingRating] = useState(false);
+  const [ratingError, setRatingError] = useState('');
 
   useEffect(() => {
     fetchAppointment();
+    fetchRating();
   }, [id]);
 
   const fetchAppointment = async () => {
@@ -27,6 +36,20 @@ function PatientAppointmentDetail() {
       console.error('Error fetching appointment:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRating = async () => {
+    try {
+      setLoadingRating(true);
+      const response = await patientService.getRating(id);
+      if (response.success) {
+        setRating(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching rating:', error);
+    } finally {
+      setLoadingRating(false);
     }
   };
 
@@ -79,6 +102,30 @@ function PatientAppointmentDetail() {
 
   const canTrackQueue = (status) => {
     return ['WAITING', 'CALLED', 'IN_PROGRESS'].includes(status);
+  };
+
+  const canRate = (status) => {
+    return status === 'DONE';
+  };
+
+  const handleSubmitRating = async (ratingValue, comment) => {
+    try {
+      setSubmittingRating(true);
+      setRatingError('');
+      const response = await patientService.reviewDoctor(id, ratingValue, comment);
+      if (response.success) {
+        setRating(response.data);
+        setShowRatingModal(false);
+        // Refresh appointment để cập nhật rating_avg của doctor
+        await fetchAppointment();
+      }
+    } catch (error) {
+      setRatingError(
+        error.response?.data?.message || 'Có lỗi xảy ra khi gửi đánh giá'
+      );
+    } finally {
+      setSubmittingRating(false);
+    }
   };
 
   if (loading) {
@@ -209,6 +256,20 @@ function PatientAppointmentDetail() {
             </div>
           )}
 
+          {/* Rating Section */}
+          {canRate(appointment.status) && (
+            <div className="mt-6">
+              {rating ? (
+                <MyRatingView rating={rating} />
+              ) : (
+                <RateDoctorButton
+                  onClick={() => setShowRatingModal(true)}
+                  disabled={loadingRating}
+                />
+              )}
+            </div>
+          )}
+
           {/* Actions */}
           <div className="mt-6 flex gap-4 flex-wrap">
             {canTrackQueue(appointment.status) && appointment.queue_number && (
@@ -241,6 +302,18 @@ function PatientAppointmentDetail() {
         onConfirm={handleConfirmCancel}
         appointment={appointment}
         loading={cancelling}
+      />
+
+      {/* Rating Modal */}
+      <DoctorRatingModal
+        isOpen={showRatingModal}
+        onClose={() => {
+          setShowRatingModal(false);
+          setRatingError('');
+        }}
+        onSubmit={handleSubmitRating}
+        loading={submittingRating}
+        error={ratingError}
       />
     </div>
   );

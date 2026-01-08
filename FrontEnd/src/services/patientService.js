@@ -172,6 +172,19 @@ export const patientService = {
   },
 
   /**
+   * Lấy đánh giá của appointment (nếu có)
+   */
+  async getRating(appointmentId) {
+    try {
+      const response = await api.get(`/appointments/${appointmentId}/rating`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching rating:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Đánh giá bác sĩ sau khi khám xong
    */
   async reviewDoctor(appointmentId, rating, comment) {

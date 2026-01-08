@@ -112,5 +112,30 @@ router.patch(
   appointmentsController.cancelAppointment
 );
 
+/**
+ * @route   GET /api/appointments/:id/rating
+ * @desc    Lấy đánh giá của appointment (nếu có)
+ * @access  Admin, Staff, Patient (chỉ xem rating của chính mình)
+ */
+router.get(
+  '/:id/rating',
+  authenticate,
+  requireRole(['ADMIN', 'STAFF', 'PATIENT']),
+  appointmentsController.getAppointmentRating
+);
+
+/**
+ * @route   POST /api/appointments/:id/review
+ * @desc    Đánh giá bác sĩ sau khi khám xong
+ * @access  Patient (chỉ đánh giá appointments của chính mình)
+ * @body    rating (1-5), comment (optional)
+ */
+router.post(
+  '/:id/review',
+  authenticate,
+  requireRole(['PATIENT']),
+  appointmentsController.reviewDoctor
+);
+
 module.exports = router;
 

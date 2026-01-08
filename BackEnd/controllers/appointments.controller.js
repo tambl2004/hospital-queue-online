@@ -771,5 +771,177 @@ exports.getAppointmentsByDoctorAndDate = async (req, res, next) => {
   }
 };
 
+/**
+ * Lấy đánh giá của appointment (nếu có)
+ * GET /api/appointments/:id/rating
+ */
+exports.getAppointmentRating = async (req, res, next) => {
+  try {
+    const pool = getPool();
+    const { id } = req.params;
+    const userId = req.user.id;
+    const userRoles = req.user.roles || [];
+
+    // Kiểm tra appointment có tồn tại không
+    const [appointments] = await pool.execute(
+      `SELECT id, patient_id, doctor_id, status FROM appointments WHERE id = ?`,
+      [id]
+    );
+
+    if (appointments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Lịch khám không tồn tại',
+      });
+    }
+
+    const appointment = appointments[0];
+
+    // Kiểm tra quyền: PATIENT chỉ xem rating của chính mình
+    if (userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('STAFF')) {
+      if (appointment.patient_id !== userId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Bạn không có quyền xem đánh giá này',
+        });
+      }
+    }
+
+    // Lấy rating nếu có
+    const [ratings] = await pool.execute(
+      `SELECT id, rating, comment, created_at 
+       FROM ratings 
+       WHERE appointment_id = ?`,
+      [id]
+    );
+
+    if (ratings.length === 0) {
+      return res.json({
+        success: true,
+        data: null,
+      });
+    }
+
+    res.json({
+      success: true,
+      data: ratings[0],
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Đánh giá bác sĩ sau khi khám xong
+ * POST /api/appointments/:id/review
+ */
+exports.reviewDoctor = async (req, res, next) => {
+  const connection = await getPool().getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const { id } = req.params;
+    const { rating, comment } = req.body;
+    const userId = req.user.id;
+
+    // Validate rating
+    if (!rating || !Number.isInteger(Number(rating)) || rating < 1 || rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Đánh giá phải là số từ 1 đến 5',
+      });
+    }
+
+    // Kiểm tra appointment có tồn tại không
+    const [appointments] = await connection.execute(
+      `SELECT id, patient_id, doctor_id, status FROM appointments WHERE id = ?`,
+      [id]
+    );
+
+    if (appointments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Lịch khám không tồn tại',
+      });
+    }
+
+    const appointment = appointments[0];
+
+    // Kiểm tra appointment thuộc về patient hiện tại
+    if (appointment.patient_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền đánh giá lịch khám này',
+      });
+    }
+
+    // Kiểm tra status phải là DONE
+    if (appointment.status !== 'DONE') {
+      return res.status(400).json({
+        success: false,
+        message: 'Chỉ có thể đánh giá sau khi khám xong (trạng thái DONE)',
+      });
+    }
+
+    // Kiểm tra đã có rating chưa
+    const [existingRatings] = await connection.execute(
+      `SELECT id FROM ratings WHERE appointment_id = ?`,
+      [id]
+    );
+
+    if (existingRatings.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'Bạn đã đánh giá lịch khám này rồi',
+      });
+    }
+
+    // Insert rating
+    const [result] = await connection.execute(
+      `INSERT INTO ratings (appointment_id, doctor_id, patient_id, rating, comment)
+       VALUES (?, ?, ?, ?, ?)`,
+      [id, appointment.doctor_id, userId, rating, comment || null]
+    );
+
+    // Trigger sẽ tự động cập nhật doctors.rating_avg
+    // Nhưng để đảm bảo, ta cũng có thể tính lại thủ công
+    const [avgResult] = await connection.execute(
+      `SELECT AVG(rating) as avg_rating 
+       FROM ratings 
+       WHERE doctor_id = ?`,
+      [appointment.doctor_id]
+    );
+
+    const avgRating = avgResult[0].avg_rating || 0;
+
+    await connection.execute(
+      `UPDATE doctors SET rating_avg = ? WHERE id = ?`,
+      [avgRating, appointment.doctor_id]
+    );
+
+    await connection.commit();
+
+    // Lấy lại rating vừa tạo
+    const [newRatings] = await connection.execute(
+      `SELECT id, rating, comment, created_at 
+       FROM ratings 
+       WHERE id = ?`,
+      [result.insertId]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Đánh giá thành công',
+      data: newRatings[0],
+    });
+  } catch (error) {
+    await connection.rollback();
+    next(error);
+  } finally {
+    connection.release();
+  }
+};
+
 module.exports = exports;
 
