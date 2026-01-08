@@ -13,9 +13,9 @@ const router = express.Router();
 // Tất cả routes đều yêu cầu xác thực
 router.use(authenticate);
 
-// GET routes: Cho phép ADMIN và STAFF (chỉ đọc)
-router.get('/', requireRole(['ADMIN', 'STAFF']), getDoctors);
-router.get('/:id', requireRole(['ADMIN', 'STAFF']), getDoctorById);
+// GET routes: Cho phép ADMIN, STAFF và PATIENT (chỉ đọc - public info)
+router.get('/', requireRole(['ADMIN', 'STAFF', 'PATIENT']), getDoctors);
+router.get('/:id', requireRole(['ADMIN', 'STAFF', 'PATIENT']), getDoctorById);
 
 // POST, PUT, PATCH routes: Chỉ ADMIN
 router.post('/', requireRole(['ADMIN']), createDoctor);

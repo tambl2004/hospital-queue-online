@@ -26,13 +26,13 @@ const { authenticate, requireRole } = require('../middlewares/auth');
 /**
  * @route   GET /api/appointments
  * @desc    Lấy danh sách appointments với filter
- * @access  Admin, Staff
- * @query   date, doctor_id, department_id, room_id, status, search, page, limit
+ * @access  Admin, Staff, Patient (chỉ xem appointments của chính mình)
+ * @query   date, doctor_id, department_id, room_id, status, search, page, limit, patient_id
  */
 router.get(
   '/',
   authenticate,
-  requireRole(['ADMIN', 'STAFF']),
+  requireRole(['ADMIN', 'STAFF', 'PATIENT']),
   appointmentsController.getAppointments
 );
 
@@ -64,12 +64,12 @@ router.get(
 /**
  * @route   GET /api/appointments/:id
  * @desc    Lấy chi tiết một appointment
- * @access  Admin, Staff
+ * @access  Admin, Staff, Patient (chỉ xem appointments của chính mình)
  */
 router.get(
   '/:id',
   authenticate,
-  requireRole(['ADMIN', 'STAFF']),
+  requireRole(['ADMIN', 'STAFF', 'PATIENT']),
   appointmentsController.getAppointmentById
 );
 
@@ -102,13 +102,13 @@ router.patch(
 /**
  * @route   PATCH /api/appointments/:id/cancel
  * @desc    Hủy appointment (chỉ khi WAITING)
- * @access  Admin, Staff
+ * @access  Admin, Staff, Patient (chỉ hủy appointments của chính mình)
  * @body    reason (optional)
  */
 router.patch(
   '/:id/cancel',
   authenticate,
-  requireRole(['ADMIN', 'STAFF']),
+  requireRole(['ADMIN', 'STAFF', 'PATIENT']),
   appointmentsController.cancelAppointment
 );
 

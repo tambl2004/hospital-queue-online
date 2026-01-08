@@ -7,11 +7,18 @@ const { getPool } = require('../config/database');
 const getDepartments = async (req, res, next) => {
   try {
     const pool = getPool();
-    const { search = '', page = 1, limit = 10 } = req.query;
+    const { search = '', page = 1, limit = 10, is_active } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
     let query = 'SELECT * FROM departments WHERE 1=1';
     let params = [];
+
+    // Filter theo is_active
+    if (is_active !== undefined && is_active !== '') {
+      const isActive = is_active === 'true' || is_active === true || is_active === '1';
+      query += ' AND is_active = ?';
+      params.push(isActive ? 1 : 0);
+    }
 
     // Tìm kiếm theo tên
     if (search) {

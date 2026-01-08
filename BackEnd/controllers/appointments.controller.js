@@ -39,6 +39,7 @@ exports.getAppointments = async (req, res, next) => {
       room_id,
       status,
       search, // tìm theo tên/phone/email bệnh nhân
+      patient_id, // query param
       page = 1,
       limit = 20,
       sort_by = 'queue_number', // queue_number, appointment_time, created_at
@@ -48,6 +49,17 @@ exports.getAppointments = async (req, res, next) => {
     // Build WHERE conditions
     const conditions = [];
     const params = [];
+
+    // Nếu user là PATIENT, chỉ cho xem appointments của chính họ
+    const userRoles = req.user.roles || [];
+    if (userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('STAFF')) {
+      conditions.push('a.patient_id = ?');
+      params.push(req.user.id);
+    } else if (patient_id) {
+      // ADMIN/STAFF có thể filter theo patient_id
+      conditions.push('a.patient_id = ?');
+      params.push(patient_id);
+    }
 
     // Filter theo ngày (mặc định hôm nay)
     if (date) {
@@ -79,8 +91,8 @@ exports.getAppointments = async (req, res, next) => {
       params.push(status);
     }
 
-    // Search theo tên/phone/email bệnh nhân
-    if (search && search.trim()) {
+    // Search theo tên/phone/email bệnh nhân (chỉ ADMIN/STAFF)
+    if (search && search.trim() && !userRoles.includes('PATIENT')) {
       conditions.push(
         '(p.full_name LIKE ? OR p.phone LIKE ? OR p.email LIKE ?)'
       );
@@ -103,7 +115,9 @@ exports.getAppointments = async (req, res, next) => {
     const total = countResult[0].total;
 
     // Calculate pagination
-    const offset = (page - 1) * limit;
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 20;
+    const offset = (pageNum - 1) * limitNum;
 
     // Sorting
     let orderBy = 'a.created_at DESC';
@@ -147,25 +161,60 @@ exports.getAppointments = async (req, res, next) => {
       JOIN users du ON d.user_id = du.id
       JOIN departments dept ON a.department_id = dept.id
       LEFT JOIN rooms r ON a.room_id = r.id
-      JOIN doctor_schedules ds ON a.schedule_id = ds.id
+      LEFT JOIN doctor_schedules ds ON a.schedule_id = ds.id
       LEFT JOIN queue_numbers qn ON a.id = qn.appointment_id
       ${whereClause}
       ORDER BY ${orderBy}
       LIMIT ? OFFSET ?
     `;
 
-    const [appointments] = await pool.execute(query, [...params, parseInt(limit), offset]);
+    const [appointments] = await pool.execute(query, [...params, limitNum, offset]);
+
+    // Format response data
+    const formattedAppointments = appointments.map((apt) => ({
+      id: apt.id,
+      appointment_date: apt.appointment_date,
+      appointment_time: apt.appointment_time,
+      status: apt.status,
+      queue_number: apt.queue_number,
+      doctor: {
+        id: apt.doctor_id,
+        full_name: apt.doctor_name,
+        department: {
+          id: apt.department_id,
+          name: apt.department_name,
+        },
+        room: apt.room_id
+          ? {
+              id: apt.room_id,
+              room_code: apt.room_code,
+              room_name: apt.room_name,
+            }
+          : null,
+      },
+      department: {
+        id: apt.department_id,
+        name: apt.department_name,
+      },
+      room: apt.room_id
+        ? {
+            id: apt.room_id,
+            room_code: apt.room_code,
+            room_name: apt.room_name,
+          }
+        : null,
+      created_at: apt.created_at,
+      updated_at: apt.updated_at,
+    }));
 
     res.json({
       success: true,
-      data: {
-        appointments,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total,
-          totalPages: Math.ceil(total / limit)
-        }
+      data: formattedAppointments,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum)
       }
     });
 
@@ -223,7 +272,7 @@ exports.getAppointmentById = async (req, res, next) => {
       JOIN users du ON d.user_id = du.id
       JOIN departments dept ON a.department_id = dept.id
       LEFT JOIN rooms r ON a.room_id = r.id
-      JOIN doctor_schedules ds ON a.schedule_id = ds.id
+      LEFT JOIN doctor_schedules ds ON a.schedule_id = ds.id
       LEFT JOIN queue_numbers qn ON a.id = qn.appointment_id
       WHERE a.id = ?
     `;
@@ -237,9 +286,63 @@ exports.getAppointmentById = async (req, res, next) => {
       });
     }
 
+    const appointment = appointments[0];
+
+    // Validate: PATIENT chỉ xem được appointments của chính họ
+    const userRoles = req.user.roles || [];
+    if (userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('STAFF')) {
+      if (appointment.patient_id !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          message: 'Bạn không có quyền xem lịch khám này'
+        });
+      }
+    }
+
+    // Format response
+    const formattedAppointment = {
+      id: appointment.id,
+      appointment_date: appointment.appointment_date,
+      appointment_time: appointment.appointment_time,
+      status: appointment.status,
+      queue_number: appointment.queue_number,
+      doctor: {
+        id: appointment.doctor_id,
+        full_name: appointment.doctor_name,
+        email: appointment.doctor_email,
+        phone: appointment.doctor_phone,
+        experience_years: appointment.experience_years,
+        rating_avg: appointment.rating_avg,
+        department: {
+          id: appointment.department_id,
+          name: appointment.department_name,
+        },
+        room: appointment.room_id
+          ? {
+              id: appointment.room_id,
+              room_code: appointment.room_code,
+              room_name: appointment.room_name,
+            }
+          : null,
+      },
+      department: {
+        id: appointment.department_id,
+        name: appointment.department_name,
+      },
+      room: appointment.room_id
+        ? {
+            id: appointment.room_id,
+            room_code: appointment.room_code,
+            room_name: appointment.room_name,
+          }
+        : null,
+      created_at: appointment.created_at,
+      updated_at: appointment.updated_at,
+    };
+
     res.json({
       success: true,
-      data: appointments[0]
+      data: formattedAppointment
     });
 
   } catch (error) {
@@ -500,9 +603,9 @@ exports.cancelAppointment = async (req, res, next) => {
     const { id } = req.params;
     const { reason } = req.body;
 
-    // Lấy trạng thái hiện tại
+    // Lấy trạng thái hiện tại và patient_id
     const [appointments] = await connection.query(
-      'SELECT id, status FROM appointments WHERE id = ?',
+      'SELECT id, status, patient_id FROM appointments WHERE id = ?',
       [id]
     );
 
@@ -514,7 +617,20 @@ exports.cancelAppointment = async (req, res, next) => {
       });
     }
 
-    const currentStatus = appointments[0].status;
+    const appointment = appointments[0];
+    const currentStatus = appointment.status;
+
+    // Validate: PATIENT chỉ hủy được appointments của chính họ
+    const userRoles = req.user.roles || [];
+    if (userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('STAFF')) {
+      if (appointment.patient_id !== req.user.id) {
+        await connection.rollback();
+        return res.status(403).json({
+          success: false,
+          message: 'Bạn không có quyền hủy lịch khám này'
+        });
+      }
+    }
 
     // Chỉ cho phép hủy khi status = WAITING
     if (currentStatus !== 'WAITING') {
