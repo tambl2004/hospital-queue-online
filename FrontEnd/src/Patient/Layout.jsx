@@ -26,7 +26,7 @@ const Layout = ({ children }) => {
       icon: FaList 
     },
     { 
-      paths: ['/patient/queue'], 
+      path: '/patient/queue', 
       label: 'Theo dõi số thứ tự', 
       icon: FaClipboardList 
     },

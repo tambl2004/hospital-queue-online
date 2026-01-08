@@ -146,12 +146,24 @@ export const patientService = {
   },
 
   /**
+   * Lấy thông tin hồ sơ cá nhân từ server
+   */
+  async getProfile() {
+    try {
+      const response = await api.get('/auth/me');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Cập nhật thông tin cá nhân
    */
   async updateProfile(data) {
     try {
-      const user = JSON.parse(localStorage.getItem('user'));
-      const response = await api.put(`/admin/users/${user.id}`, data);
+      const response = await api.put('/auth/profile', data);
       return response.data;
     } catch (error) {
       console.error('Error updating profile:', error);

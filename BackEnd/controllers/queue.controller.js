@@ -29,9 +29,10 @@ exports.getQueueState = async (req, res, next) => {
       });
     }
 
-    // Kiểm tra quyền: DOCTOR chỉ được xem queue của chính mình
+    // Kiểm tra quyền: DOCTOR chỉ được xem queue của chính mình, PATIENT chỉ xem queue của appointment của mình
     const userRoles = req.user.roles || [];
     const isDoctor = userRoles.includes('DOCTOR');
+    const isPatient = userRoles.includes('PATIENT');
     const isAdminOrStaff = userRoles.some(role => ['ADMIN', 'STAFF'].includes(role));
 
     if (isDoctor && !isAdminOrStaff) {
@@ -45,6 +46,38 @@ exports.getQueueState = async (req, res, next) => {
         return res.status(403).json({
           success: false,
           message: 'Không có quyền truy cập queue này'
+        });
+      }
+    } else if (isPatient && !isAdminOrStaff && !isDoctor) {
+      // PATIENT chỉ được xem queue của appointment của chính mình
+      const { appointment_id } = req.query;
+      
+      if (!appointment_id) {
+        return res.status(400).json({
+          success: false,
+          message: 'appointment_id là bắt buộc cho patient'
+        });
+      }
+
+      // Kiểm tra appointment thuộc về patient này và khớp với doctor_id, date
+      const [appointments] = await pool.execute(
+        'SELECT id, patient_id, doctor_id, appointment_date FROM appointments WHERE id = ? AND patient_id = ?',
+        [appointment_id, req.user.id]
+      );
+
+      if (appointments.length === 0) {
+        return res.status(403).json({
+          success: false,
+          message: 'Không tìm thấy lịch khám hoặc không có quyền truy cập'
+        });
+      }
+
+      const appointment = appointments[0];
+      
+      if (appointment.doctor_id !== parseInt(doctor_id) || appointment.appointment_date !== date) {
+        return res.status(403).json({
+          success: false,
+          message: 'Thông tin lịch khám không khớp'
         });
       }
     }
@@ -596,7 +629,7 @@ async function getQueueStateInternal(pool, doctor_id, date) {
     ORDER BY qn.queue_number ASC
   `;
 
-  const [appointments] = await pool.execute(query, [doctor_id, date]);
+  const [appointmentRows] = await pool.execute(query, [doctor_id, date]);
 
   const waitingList = [];
   const calledList = [];
@@ -605,7 +638,7 @@ async function getQueueStateInternal(pool, doctor_id, date) {
   let next = null;
   let doneCount = 0;
 
-  for (const apt of appointments) {
+  for (const apt of appointmentRows) {
     const item = {
       appointmentId: apt.appointment_id,
       queueNumber: apt.queue_number,
@@ -653,6 +686,13 @@ async function getQueueStateInternal(pool, doctor_id, date) {
     next = waitingList[0];
   }
 
+  // Tạo danh sách appointments tổng hợp (để frontend dễ xử lý)
+  const appointments = [
+    ...waitingList,
+    ...calledList,
+    ...(inProgress ? [inProgress] : []),
+  ].sort((a, b) => a.queueNumber - b.queueNumber);
+
   return {
     context: {
       doctorId: parseInt(doctor_id),
@@ -663,6 +703,7 @@ async function getQueueStateInternal(pool, doctor_id, date) {
     waitingList: waitingList,
     calledList: calledList,
     inProgress: inProgress,
+    appointments: appointments, // Danh sách tổng hợp
     doneCount: doneCount,
     waitingCount: waitingList.length
   };

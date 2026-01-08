@@ -370,8 +370,21 @@ exports.createAppointment = async (req, res, next) => {
       appointment_time
     } = req.body;
 
+    // Xác định patient_id: PATIENT tự đặt lịch cho mình, ADMIN/STAFF có thể đặt cho người khác
+    const userRoles = req.user.roles || [];
+    const isPatient = userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('STAFF');
+    
+    let finalPatientId;
+    if (isPatient) {
+      // PATIENT tự động lấy patient_id từ token
+      finalPatientId = req.user.id;
+    } else {
+      // ADMIN/STAFF phải cung cấp patient_id
+      finalPatientId = patient_id;
+    }
+
     // Validation
-    if (!patient_id || !doctor_id || !schedule_id || !appointment_date || !appointment_time) {
+    if (!finalPatientId || !doctor_id || !schedule_id || !appointment_date || !appointment_time) {
       return res.status(400).json({
         success: false,
         message: 'Thiếu thông tin bắt buộc'
@@ -381,7 +394,7 @@ exports.createAppointment = async (req, res, next) => {
     // Kiểm tra patient tồn tại
     const [patients] = await connection.query(
       'SELECT id FROM users WHERE id = ? AND is_active = 1',
-      [patient_id]
+      [finalPatientId]
     );
     if (patients.length === 0) {
       await connection.rollback();
@@ -440,7 +453,7 @@ exports.createAppointment = async (req, res, next) => {
        (patient_id, doctor_id, department_id, room_id, schedule_id, 
         appointment_date, appointment_time, status) 
        VALUES (?, ?, ?, ?, ?, ?, ?, 'WAITING')`,
-      [patient_id, doctor_id, doctor.department_id, doctor.room_id, 
+      [finalPatientId, doctor_id, doctor.department_id, doctor.room_id, 
        schedule_id, appointment_date, appointment_time]
     );
 

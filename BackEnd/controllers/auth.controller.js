@@ -299,6 +299,145 @@ const getMe = async (req, res, next) => {
 };
 
 /**
+ * Cập nhật hồ sơ cá nhân (Patient tự cập nhật)
+ * PUT /api/auth/profile
+ */
+const updateProfile = async (req, res, next) => {
+  try {
+    const pool = getPool();
+    const { full_name, phone, gender, date_of_birth } = req.body;
+    const userId = req.user.id;
+
+    // Validate full_name
+    if (full_name !== undefined) {
+      const nameValidation = validateFullName(full_name);
+      if (!nameValidation.valid) {
+        return res.status(400).json({
+          success: false,
+          message: nameValidation.message,
+        });
+      }
+    }
+
+    // Validate phone
+    if (phone !== undefined && phone && !isValidPhone(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Số điện thoại không hợp lệ',
+      });
+    }
+
+    // Validate gender
+    if (gender !== undefined && gender !== '' && !['MALE', 'FEMALE', 'OTHER'].includes(gender)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Giới tính không hợp lệ',
+      });
+    }
+
+    // Validate date_of_birth
+    if (date_of_birth !== undefined && date_of_birth !== '') {
+      const birthDate = new Date(date_of_birth);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (isNaN(birthDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: 'Ngày sinh không hợp lệ',
+        });
+      }
+
+      if (birthDate > today) {
+        return res.status(400).json({
+          success: false,
+          message: 'Ngày sinh không được vượt quá ngày hiện tại',
+        });
+      }
+    }
+
+    // Kiểm tra user có tồn tại không
+    const [existing] = await pool.execute('SELECT id FROM users WHERE id = ?', [userId]);
+
+    if (existing.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Người dùng không tồn tại',
+      });
+    }
+
+    // Build update fields
+    const updateFields = [];
+    const updateValues = [];
+
+    if (full_name !== undefined) {
+      updateFields.push('full_name = ?');
+      updateValues.push(full_name.trim());
+    }
+
+    if (phone !== undefined) {
+      updateFields.push('phone = ?');
+      updateValues.push(phone || null);
+    }
+
+    if (gender !== undefined) {
+      updateFields.push('gender = ?');
+      updateValues.push(gender || null);
+    }
+
+    if (date_of_birth !== undefined) {
+      updateFields.push('date_of_birth = ?');
+      updateValues.push(date_of_birth || null);
+    }
+
+    // Cập nhật nếu có thay đổi
+    if (updateFields.length > 0) {
+      updateValues.push(userId);
+      await pool.execute(
+        `UPDATE users SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        updateValues
+      );
+    }
+
+    // Lấy lại thông tin đã cập nhật
+    const [updated] = await pool.execute(
+      `SELECT id, full_name, email, phone, gender, date_of_birth, is_active, created_at
+       FROM users WHERE id = ?`,
+      [userId]
+    );
+
+    const user = updated[0];
+
+    // Lấy roles
+    const [roles] = await pool.execute(
+      `SELECT r.code, r.name 
+       FROM user_roles ur 
+       INNER JOIN roles r ON ur.role_id = r.id 
+       WHERE ur.user_id = ?`,
+      [user.id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Cập nhật hồ sơ thành công',
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+        phone: user.phone,
+        gender: user.gender,
+        date_of_birth: user.date_of_birth,
+        is_active: user.is_active,
+        roles: roles.map((r) => r.code),
+        created_at: user.created_at,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Quên mật khẩu (placeholder - có thể implement sau)
  */
 const forgotPassword = async (req, res, next) => {
@@ -341,5 +480,6 @@ module.exports = {
   register,
   login,
   getMe,
+  updateProfile,
   forgotPassword,
 };

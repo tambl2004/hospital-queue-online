@@ -102,7 +102,7 @@ function AppointmentCard({ appointment, onCancel }) {
             {/* Theo dõi số */}
             {canTrackQueue(appointment.status) && appointment.queue_number && (
               <Link
-                to={`/queue/${appointment.id}`}
+                to={`/patient/queue/${appointment.id}`}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center gap-2"
               >
                 <FaClock />

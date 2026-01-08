@@ -1,6 +1,6 @@
 // backend/routes/auth.routes.js
 const express = require('express');
-const { register, login, getMe, forgotPassword } = require('../controllers/auth.controller');
+const { register, login, getMe, updateProfile, forgotPassword } = require('../controllers/auth.controller');
 const { authenticate } = require('../middlewares/auth');
 
 const router = express.Router();
@@ -12,6 +12,7 @@ router.post('/forgot-password', forgotPassword);
 
 // Protected routes
 router.get('/me', authenticate, getMe);
+router.put('/profile', authenticate, updateProfile);
 
 module.exports = router;
 

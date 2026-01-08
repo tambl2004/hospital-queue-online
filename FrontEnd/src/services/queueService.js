@@ -40,6 +40,7 @@ export const connectQueueSocket = (onStateUpdate, onError) => {
 
   socket.on('connect', () => {
     console.log('[Queue Socket] Connected:', socket.id);
+    // Có thể emit join room ở đây nếu cần
   });
 
   socket.on('queue:state', (data) => {
@@ -79,14 +80,15 @@ export const connectQueueSocket = (onStateUpdate, onError) => {
  * Join queue room
  * @param {number} doctorId - ID bác sĩ
  * @param {string} date - Ngày (YYYY-MM-DD)
+ * @param {number} appointmentId - ID appointment (cho PATIENT)
  */
-export const joinQueueRoom = (doctorId, date) => {
+export const joinQueueRoom = (doctorId, date, appointmentId = null) => {
   if (!socket || !socket.connected) {
     console.warn('[Queue Socket] Socket not connected');
     return;
   }
   
-  socket.emit('queue:join', { doctorId, date });
+  socket.emit('queue:join', { doctorId, date, appointmentId });
 };
 
 /**
@@ -120,13 +122,16 @@ export const queueService = {
    * Lấy trạng thái queue theo doctor + date
    * @param {number} doctorId - ID bác sĩ
    * @param {string} date - Ngày (YYYY-MM-DD)
+   * @param {number} appointmentId - ID appointment (cho PATIENT)
    * @returns {Promise<Object>} Queue state
    */
-  async getQueueState(doctorId, date) {
+  async getQueueState(doctorId, date, appointmentId = null) {
     try {
-      const response = await api.get('/queue/state', {
-        params: { doctor_id: doctorId, date }
-      });
+      const params = { doctor_id: doctorId, date };
+      if (appointmentId) {
+        params.appointment_id = appointmentId;
+      }
+      const response = await api.get('/queue/state', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching queue state:', error);

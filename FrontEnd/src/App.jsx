@@ -27,6 +27,7 @@ import BookAppointment from './Patient/BookAppointment';
 import MyAppointments from './Patient/MyAppointments';
 import AppointmentDetail from './Patient/AppointmentDetail';
 import QueueTracker from './Patient/QueueTracker';
+import QueueTrackingList from './Patient/QueueTrackingList';
 import PatientProfile from './Patient/PatientProfile';
 import DoctorReview from './Patient/DoctorReview';
 import { authService } from './services/authService';
@@ -123,6 +124,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <QueueTracker />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/queue"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <QueueTrackingList />
               </Layout>
             </ProtectedRoute>
           }

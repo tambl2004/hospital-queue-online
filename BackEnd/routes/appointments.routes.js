@@ -75,14 +75,14 @@ router.get(
 
 /**
  * @route   POST /api/appointments
- * @desc    Tạo appointment mới (Admin/Staff tạo thủ công)
- * @access  Admin, Staff
- * @body    patient_id, doctor_id, schedule_id, appointment_date, appointment_time
+ * @desc    Tạo appointment mới
+ * @access  Admin, Staff, Patient (Patient tự đặt lịch cho mình)
+ * @body    doctor_id, schedule_id, appointment_date, appointment_time, patient_id (chỉ Admin/Staff)
  */
 router.post(
   '/',
   authenticate,
-  requireRole(['ADMIN', 'STAFF']),
+  requireRole(['ADMIN', 'STAFF', 'PATIENT']),
   appointmentsController.createAppointment
 );
 

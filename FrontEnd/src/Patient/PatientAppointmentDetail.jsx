@@ -213,7 +213,7 @@ function PatientAppointmentDetail() {
           <div className="mt-6 flex gap-4 flex-wrap">
             {canTrackQueue(appointment.status) && appointment.queue_number && (
               <Link
-                to={`/queue/${appointment.id}`}
+                to={`/patient/queue/${appointment.id}`}
                 className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2"
               >
                 <FaEye />
