@@ -7,6 +7,9 @@ import {
   FaSignOutAlt,
   FaBars,
   FaList,
+  FaClipboardList,
+  FaUser,
+  FaStar,
 } from 'react-icons/fa';
 
 const Layout = ({ children }) => {
@@ -18,7 +21,10 @@ const Layout = ({ children }) => {
   const menuItems = [
     { path: '/doctor/dashboard', label: 'Dashboard', icon: FaChartBar },
     { path: '/doctor/queue', label: 'Theo dõi hàng chờ', icon: FaList },
-    { path: '/doctor/schedule', label: 'Lịch khám', icon: FaCalendarAlt },
+    { path: '/doctor/appointments', label: 'Lịch khám của tôi', icon: FaClipboardList },
+    { path: '/doctor/schedule', label: 'Lịch làm việc', icon: FaCalendarAlt },
+    { path: '/doctor/profile', label: 'Hồ sơ', icon: FaUser },
+    { path: '/doctor/ratings', label: 'Đánh giá', icon: FaStar },
   ];
 
   const handleLogout = () => {

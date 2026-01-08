@@ -33,9 +33,9 @@ exports.getQueueState = async (req, res, next) => {
     const userRoles = req.user.roles || [];
     const isDoctor = userRoles.includes('DOCTOR');
     const isPatient = userRoles.includes('PATIENT');
-    const isAdminOrStaff = userRoles.some(role => ['ADMIN', 'STAFF'].includes(role));
+    const isAdmin = userRoles.includes('ADMIN');
 
-    if (isDoctor && !isAdminOrStaff) {
+    if (isDoctor && !isAdmin) {
       // DOCTOR chỉ được xem queue của chính mình
       const [doctors] = await pool.execute(
         'SELECT id FROM doctors WHERE user_id = ? AND id = ?',
@@ -48,7 +48,7 @@ exports.getQueueState = async (req, res, next) => {
           message: 'Không có quyền truy cập queue này'
         });
       }
-    } else if (isPatient && !isAdminOrStaff && !isDoctor) {
+    } else if (isPatient && !isAdmin && !isDoctor) {
       // PATIENT chỉ được xem queue của appointment của chính mình
       const { appointment_id } = req.query;
       

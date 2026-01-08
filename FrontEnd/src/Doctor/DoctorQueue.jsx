@@ -17,7 +17,7 @@ import {
  * 
  * Features:
  * - Xem toàn bộ queue hôm nay
- * - Realtime updates khi Staff gọi số
+ * - Realtime updates khi Doctor gọi số
  * - Xem số hiện tại, số tiếp theo, danh sách đầy đủ
  * - Có thể đánh dấu "Hoàn thành khám" (nếu đang khám)
  */

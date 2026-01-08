@@ -11,12 +11,12 @@ import AdminUserList from './Admin/AdminUserList';
 import AdminAppointmentList from './Admin/AdminAppointmentList';
 import AdminQueueDashboard from './Admin/AdminQueueDashboard';
 import AdminReports from './Admin/AdminReports';
-import StaffDashboard from './Staff/StaffDashboard';
-import StaffAppointmentList from './Staff/StaffAppointmentList';
-import StaffQueueDashboard from './Staff/StaffQueueDashboard';
 import DoctorDashboard from './Doctor/DoctorDashboard';
 import DoctorQueue from './Doctor/DoctorQueue';
 import DoctorSchedule from './Doctor/DoctorSchedule';
+import DoctorAppointments from './Doctor/DoctorAppointments';
+import DoctorProfile from './Doctor/DoctorProfile';
+import DoctorRatings from './Doctor/DoctorRatings';
 // Patient Public Routes
 import DepartmentList from './Patient/DepartmentList';
 import DoctorList from './Patient/DoctorList';
@@ -65,16 +65,14 @@ function App() {
         <Route path="/admin/queue" element={<ProtectedRoute><AdminQueueDashboard /></ProtectedRoute>} />
         <Route path="/admin/statistics" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
         
-        {/* Staff Routes */}
-        <Route path="/staff/dashboard" element={<ProtectedRoute role="STAFF"><StaffDashboard /></ProtectedRoute>} />
-        <Route path="/staff/appointments" element={<ProtectedRoute role="STAFF"><StaffAppointmentList /></ProtectedRoute>} />
-        <Route path="/staff/queue" element={<ProtectedRoute role="STAFF"><StaffQueueDashboard /></ProtectedRoute>} />
-        <Route path="/staff" element={<Navigate to="/staff/dashboard" replace />} />
         
         {/* Doctor Routes */}
         <Route path="/doctor/dashboard" element={<ProtectedRoute role="DOCTOR"><DoctorDashboard /></ProtectedRoute>} />
         <Route path="/doctor/queue" element={<ProtectedRoute role="DOCTOR"><DoctorQueue /></ProtectedRoute>} />
         <Route path="/doctor/schedule" element={<ProtectedRoute role="DOCTOR"><DoctorSchedule /></ProtectedRoute>} />
+        <Route path="/doctor/appointments" element={<ProtectedRoute role="DOCTOR"><DoctorAppointments /></ProtectedRoute>} />
+        <Route path="/doctor/profile" element={<ProtectedRoute role="DOCTOR"><DoctorProfile /></ProtectedRoute>} />
+        <Route path="/doctor/ratings" element={<ProtectedRoute role="DOCTOR"><DoctorRatings /></ProtectedRoute>} />
         <Route path="/doctor" element={<Navigate to="/doctor/dashboard" replace />} />
         
         {/* Patient Protected Routes */}
@@ -189,9 +187,7 @@ function ProtectedRoute({ children, role }) {
     
     if (!userRoles.includes(role) && !userRoles.includes('ADMIN')) {
       // Redirect based on user's role
-      if (userRoles.includes('STAFF')) {
-        return <Navigate to="/staff/dashboard" replace />;
-      } else if (userRoles.includes('DOCTOR')) {
+      if (userRoles.includes('DOCTOR')) {
         return <Navigate to="/doctor/dashboard" replace />;
       } else {
         return <Navigate to="/auth/login" replace />;

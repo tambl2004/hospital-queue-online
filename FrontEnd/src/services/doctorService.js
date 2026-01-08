@@ -37,5 +37,38 @@ export const doctorService = {
       throw error;
     }
   },
+
+  // Lấy danh sách appointments hôm nay của Doctor
+  async getTodayAppointments(params = {}) {
+    try {
+      const response = await api.get('/doctor/appointments', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching today appointments:', error);
+      throw error;
+    }
+  },
+
+  // Lấy thông tin profile của Doctor
+  async getProfile() {
+    try {
+      const response = await api.get('/doctor/dashboard');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching doctor profile:', error);
+      throw error;
+    }
+  },
+
+  // Lấy danh sách đánh giá của Doctor
+  async getRatings(params = {}) {
+    try {
+      const response = await api.get('/doctor/ratings', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching doctor ratings:', error);
+      throw error;
+    }
+  },
 };
 

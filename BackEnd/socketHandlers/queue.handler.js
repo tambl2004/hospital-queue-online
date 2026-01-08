@@ -37,7 +37,7 @@ const setupQueueHandlers = (io) => {
     console.log(`[Queue Socket] User connected: ${socket.id}, userId: ${socket.userId}`);
 
     const userRoles = socket.userRoles || [];
-    const isAdminOrStaff = userRoles.some(role => ['ADMIN', 'STAFF'].includes(role));
+    const isAdmin = userRoles.some(role => role === 'ADMIN');
     const isDoctor = userRoles.some(role => role === 'DOCTOR');
     const isPatient = userRoles.some(role => role === 'PATIENT');
 
@@ -53,8 +53,8 @@ const setupQueueHandlers = (io) => {
 
         const pool = getPool();
 
-        // Kiểm tra quyền: ADMIN/STAFF có thể xem mọi queue, DOCTOR chỉ xem queue của chính mình
-        if (!isAdminOrStaff && isDoctor) {
+        // Kiểm tra quyền: ADMIN có thể xem mọi queue, DOCTOR chỉ xem queue của chính mình
+        if (!isAdmin && isDoctor) {
           // DOCTOR chỉ được xem queue của chính mình
           const [doctors] = await pool.execute(
             'SELECT id FROM doctors WHERE user_id = ? AND id = ?',
@@ -65,7 +65,7 @@ const setupQueueHandlers = (io) => {
             socket.emit('queue:error', { message: 'Không có quyền truy cập queue này' });
             return;
           }
-        } else if (isPatient && !isAdminOrStaff && !isDoctor) {
+        } else if (isPatient && !isAdmin && !isDoctor) {
           // PATIENT chỉ được xem queue của appointment của chính mình
           if (!appointmentId) {
             socket.emit('queue:error', { message: 'appointmentId là bắt buộc cho patient' });
@@ -93,7 +93,7 @@ const setupQueueHandlers = (io) => {
 
           // Lưu appointmentId vào socket để dùng sau
           socket.currentAppointmentId = appointmentId;
-        } else if (!isAdminOrStaff && !isDoctor && !isPatient) {
+        } else if (!isAdmin && !isDoctor && !isPatient) {
           socket.emit('queue:error', { message: 'Không có quyền truy cập queue dashboard' });
           return;
         }

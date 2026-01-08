@@ -166,7 +166,7 @@ DELIMITER ;
 
 CREATE TABLE `roles` (
   `id` int(11) NOT NULL,
-  `code` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ADMIN, STAFF, PATIENT, DOCTOR',
+  `code` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ADMIN, DOCTOR, PATIENT',
   `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -177,9 +177,8 @@ CREATE TABLE `roles` (
 
 INSERT INTO `roles` (`id`, `code`, `name`, `created_at`) VALUES
 (1, 'ADMIN', 'Quản trị viên', '2026-01-07 15:53:14'),
-(2, 'STAFF', 'Nhân viên', '2026-01-07 15:53:14'),
-(3, 'DOCTOR', 'Bác sĩ', '2026-01-07 15:53:14'),
-(4, 'PATIENT', 'Bệnh nhân', '2026-01-07 15:53:14');
+(2, 'DOCTOR', 'Bác sĩ', '2026-01-07 15:53:14'),
+(3, 'PATIENT', 'Bệnh nhân', '2026-01-07 15:53:14');
 
 -- --------------------------------------------------------
 

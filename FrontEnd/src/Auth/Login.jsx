@@ -39,8 +39,6 @@ function Login() {
       
       if (roles.includes('ADMIN')) {
         navigate('/admin');
-      } else if (roles.includes('STAFF')) {
-        navigate('/staff/dashboard');
       } else if (roles.includes('DOCTOR')) {
         navigate('/doctor/dashboard');
       } else {

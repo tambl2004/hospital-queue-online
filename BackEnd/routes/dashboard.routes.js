@@ -9,18 +9,17 @@ const { authenticate, requireRole } = require('../middlewares/auth');
  * 
  * Quyền truy cập:
  * - ADMIN: Full access
- * - STAFF: Full access
  */
 
 /**
  * @route   GET /api/admin/dashboard
  * @desc    Lấy dữ liệu dashboard tổng quan (hôm nay + 7 ngày gần nhất)
- * @access  Admin, Staff
+ * @access  Admin
  */
 router.get(
   '/',
   authenticate,
-  requireRole(['ADMIN', 'STAFF']),
+  requireRole(['ADMIN']),
   dashboardController.getDashboardData
 );
 

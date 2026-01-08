@@ -52,11 +52,11 @@ exports.getAppointments = async (req, res, next) => {
 
     // Nếu user là PATIENT, chỉ cho xem appointments của chính họ
     const userRoles = req.user.roles || [];
-    if (userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('STAFF')) {
+    if (userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('DOCTOR')) {
       conditions.push('a.patient_id = ?');
       params.push(req.user.id);
     } else if (patient_id) {
-      // ADMIN/STAFF có thể filter theo patient_id
+      // ADMIN/DOCTOR có thể filter theo patient_id
       conditions.push('a.patient_id = ?');
       params.push(patient_id);
     }
@@ -91,7 +91,7 @@ exports.getAppointments = async (req, res, next) => {
       params.push(status);
     }
 
-    // Search theo tên/phone/email bệnh nhân (chỉ ADMIN/STAFF)
+    // Search theo tên/phone/email bệnh nhân (chỉ ADMIN/DOCTOR)
     if (search && search.trim() && !userRoles.includes('PATIENT')) {
       conditions.push(
         '(p.full_name LIKE ? OR p.phone LIKE ? OR p.email LIKE ?)'
@@ -290,7 +290,7 @@ exports.getAppointmentById = async (req, res, next) => {
 
     // Validate: PATIENT chỉ xem được appointments của chính họ
     const userRoles = req.user.roles || [];
-    if (userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('STAFF')) {
+    if (userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('DOCTOR')) {
       if (appointment.patient_id !== req.user.id) {
         return res.status(403).json({
           success: false,
@@ -352,7 +352,7 @@ exports.getAppointmentById = async (req, res, next) => {
 };
 
 /**
- * Tạo appointment mới (dành cho Admin/Staff tạo thủ công)
+ * Tạo appointment mới (dành cho Admin/Doctor tạo thủ công)
  * POST /api/appointments
  */
 exports.createAppointment = async (req, res, next) => {
@@ -370,16 +370,16 @@ exports.createAppointment = async (req, res, next) => {
       appointment_time
     } = req.body;
 
-    // Xác định patient_id: PATIENT tự đặt lịch cho mình, ADMIN/STAFF có thể đặt cho người khác
+    // Xác định patient_id: PATIENT tự đặt lịch cho mình, ADMIN/DOCTOR có thể đặt cho người khác
     const userRoles = req.user.roles || [];
-    const isPatient = userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('STAFF');
+    const isPatient = userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('DOCTOR');
     
     let finalPatientId;
     if (isPatient) {
       // PATIENT tự động lấy patient_id từ token
       finalPatientId = req.user.id;
     } else {
-      // ADMIN/STAFF phải cung cấp patient_id
+      // ADMIN/DOCTOR phải cung cấp patient_id
       finalPatientId = patient_id;
     }
 
@@ -635,7 +635,7 @@ exports.cancelAppointment = async (req, res, next) => {
 
     // Validate: PATIENT chỉ hủy được appointments của chính họ
     const userRoles = req.user.roles || [];
-    if (userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('STAFF')) {
+    if (userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('DOCTOR')) {
       if (appointment.patient_id !== req.user.id) {
         await connection.rollback();
         return res.status(403).json({
@@ -798,7 +798,7 @@ exports.getAppointmentRating = async (req, res, next) => {
     const appointment = appointments[0];
 
     // Kiểm tra quyền: PATIENT chỉ xem rating của chính mình
-    if (userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('STAFF')) {
+    if (userRoles.includes('PATIENT') && !userRoles.includes('ADMIN') && !userRoles.includes('DOCTOR')) {
       if (appointment.patient_id !== userId) {
         return res.status(403).json({
           success: false,

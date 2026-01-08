@@ -36,5 +36,31 @@ router.get(
   doctorController.getSchedules
 );
 
+/**
+ * @route   GET /api/doctor/appointments
+ * @desc    Lấy danh sách lượt đăng ký hôm nay của Doctor
+ * @access  Doctor, Admin
+ * @query   status, page, limit
+ */
+router.get(
+  '/appointments',
+  authenticate,
+  requireRole(['DOCTOR', 'ADMIN']),
+  doctorController.getTodayAppointments
+);
+
+/**
+ * @route   GET /api/doctor/ratings
+ * @desc    Lấy danh sách đánh giá của Doctor (read-only)
+ * @access  Doctor, Admin
+ * @query   page, limit
+ */
+router.get(
+  '/ratings',
+  authenticate,
+  requireRole(['DOCTOR', 'ADMIN']),
+  doctorController.getRatings
+);
+
 module.exports = router;
 

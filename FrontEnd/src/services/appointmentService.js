@@ -47,7 +47,7 @@ export const appointmentService = {
   },
 
   /**
-   * Tạo appointment mới (Admin/Staff tạo thủ công)
+   * Tạo appointment mới (Admin/Doctor tạo thủ công)
    * @param {Object} data - Appointment data
    * @param {number} data.patient_id - ID bệnh nhân
    * @param {number} data.doctor_id - ID bác sĩ

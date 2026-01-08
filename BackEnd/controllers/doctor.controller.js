@@ -30,7 +30,8 @@ exports.getDashboardData = async (req, res, next) => {
         dept.name as department_name,
         d.room_id,
         r.room_name,
-        r.room_code
+        r.room_code,
+        d.rating_avg
       FROM doctors d
       INNER JOIN users u ON d.user_id = u.id
       INNER JOIN departments dept ON d.department_id = dept.id
@@ -133,7 +134,8 @@ exports.getDashboardData = async (req, res, next) => {
           full_name: doctor.full_name,
           department_name: doctor.department_name,
           room_name: doctor.room_name || null,
-          room_code: doctor.room_code || null
+          room_code: doctor.room_code || null,
+          rating_avg: doctor.rating_avg ? parseFloat(doctor.rating_avg) : 0
         },
         queue_info: {
           current: current,
@@ -252,6 +254,212 @@ exports.getSchedules = async (req, res, next) => {
 
   } catch (error) {
     console.error('Error fetching doctor schedules:', error);
+    next(error);
+  }
+};
+
+/**
+ * Lấy danh sách lượt đăng ký hôm nay của Doctor
+ * GET /api/doctor/appointments
+ */
+exports.getTodayAppointments = async (req, res, next) => {
+  try {
+    const pool = getPool();
+    const today = new Date().toISOString().split('T')[0];
+    const userId = req.user.id;
+    const { status, page = 1, limit = 50 } = req.query;
+
+    // Lấy doctor_id từ user_id
+    const [doctors] = await pool.execute(
+      'SELECT id FROM doctors WHERE user_id = ? AND is_active = 1',
+      [userId]
+    );
+
+    if (doctors.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy thông tin bác sĩ'
+      });
+    }
+
+    const doctorId = doctors[0].id;
+
+    let query = `
+      SELECT 
+        a.id,
+        a.appointment_date,
+        a.appointment_time,
+        a.status,
+        a.created_at,
+        p.full_name as patient_name,
+        p.phone as patient_phone,
+        du.full_name as doctor_name,
+        dept.name as department_name,
+        r.room_name,
+        r.room_code,
+        qn.queue_number
+      FROM appointments a
+      JOIN users p ON a.patient_id = p.id
+      JOIN doctors d ON a.doctor_id = d.id
+      JOIN users du ON d.user_id = du.id
+      JOIN departments dept ON a.department_id = dept.id
+      LEFT JOIN rooms r ON a.room_id = r.id
+      LEFT JOIN queue_numbers qn ON a.id = qn.appointment_id
+      WHERE a.appointment_date = ?
+        AND a.doctor_id = ?
+    `;
+
+    const params = [today, doctorId];
+
+    if (status) {
+      query += ' AND a.status = ?';
+      params.push(status);
+    }
+
+    query += ' ORDER BY qn.queue_number ASC, a.created_at DESC';
+
+    // Pagination
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    query += ` LIMIT ? OFFSET ?`;
+    params.push(parseInt(limit), offset);
+
+    const [appointments] = await pool.execute(query, params);
+
+    // Count total
+    let countQuery = `
+      SELECT COUNT(*) as total
+      FROM appointments a
+      WHERE a.appointment_date = ?
+        AND a.doctor_id = ?
+    `;
+    const countParams = [today, doctorId];
+
+    if (status) {
+      countQuery += ' AND a.status = ?';
+      countParams.push(status);
+    }
+
+    const [countResult] = await pool.execute(countQuery, countParams);
+    const total = countResult[0].total;
+
+    res.json({
+      success: true,
+      data: {
+        appointments: appointments.map(item => ({
+          id: item.id,
+          appointment_date: item.appointment_date.toISOString().split('T')[0],
+          appointment_time: item.appointment_time ? item.appointment_time.toString().slice(0, 5) : null,
+          status: item.status,
+          created_at: item.created_at,
+          patient_name: item.patient_name,
+          patient_phone: item.patient_phone,
+          doctor_name: item.doctor_name,
+          department_name: item.department_name,
+          room_name: item.room_name,
+          room_code: item.room_code,
+          queue_number: item.queue_number
+        })),
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: parseInt(total),
+          totalPages: Math.ceil(total / parseInt(limit))
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching today appointments:', error);
+    next(error);
+  }
+};
+
+/**
+ * Lấy danh sách đánh giá của Doctor
+ * GET /api/doctor/ratings
+ */
+exports.getRatings = async (req, res, next) => {
+  try {
+    const pool = getPool();
+    const userId = req.user.id;
+    const { page = 1, limit = 20 } = req.query;
+
+    // Lấy doctor_id từ user_id
+    const [doctors] = await pool.execute(
+      'SELECT id FROM doctors WHERE user_id = ? AND is_active = 1',
+      [userId]
+    );
+
+    if (doctors.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy thông tin bác sĩ'
+      });
+    }
+
+    const doctorId = doctors[0].id;
+
+    // Count total ratings
+    const [countResult] = await pool.execute(
+      'SELECT COUNT(*) as total FROM ratings WHERE doctor_id = ?',
+      [doctorId]
+    );
+    const total = countResult[0].total;
+
+    // Pagination
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    // Query ratings với thông tin bệnh nhân và appointment
+    const query = `
+      SELECT 
+        r.id,
+        r.rating,
+        r.comment,
+        r.created_at,
+        p.full_name as patient_name,
+        a.appointment_date,
+        a.appointment_time
+      FROM ratings r
+      JOIN appointments a ON r.appointment_id = a.id
+      JOIN users p ON r.patient_id = p.id
+      WHERE r.doctor_id = ?
+      ORDER BY r.created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+
+    const [ratings] = await pool.execute(query, [doctorId, parseInt(limit), offset]);
+
+    // Tính điểm trung bình
+    const [avgResult] = await pool.execute(
+      'SELECT AVG(rating) as avg_rating FROM ratings WHERE doctor_id = ?',
+      [doctorId]
+    );
+    const avgRating = avgResult[0].avg_rating ? parseFloat(avgResult[0].avg_rating) : 0;
+
+    res.json({
+      success: true,
+      data: {
+        ratings: ratings.map(rating => ({
+          id: rating.id,
+          rating: rating.rating,
+          comment: rating.comment,
+          created_at: rating.created_at,
+          patient_name: rating.patient_name,
+          appointment_date: rating.appointment_date,
+          appointment_time: rating.appointment_time ? rating.appointment_time.toString().slice(0, 5) : null
+        })),
+        avg_rating: avgRating,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: parseInt(total),
+          totalPages: Math.ceil(total / parseInt(limit))
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching doctor ratings:', error);
     next(error);
   }
 };

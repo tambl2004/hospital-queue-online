@@ -87,7 +87,6 @@ const AdminUserList = () => {
       // Roles được hardcode vì không có API riêng
       setRoles([
         { code: 'ADMIN', name: 'Quản trị viên' },
-        { code: 'STAFF', name: 'Nhân viên' },
         { code: 'DOCTOR', name: 'Bác sĩ' },
         { code: 'PATIENT', name: 'Bệnh nhân' },
       ]);

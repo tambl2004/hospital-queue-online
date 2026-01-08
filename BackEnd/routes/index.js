@@ -15,7 +15,6 @@ const appointmentsRoutes = require('./appointments.routes');
 const queueRoutes = require('./queue.routes');
 const reportsRoutes = require('./reports.routes');
 const dashboardRoutes = require('./dashboard.routes');
-const staffRoutes = require('./staff.routes');
 const doctorRoutes = require('./doctor.routes');
 
 router.use('/auth', authRoutes);
@@ -31,7 +30,6 @@ router.use('/appointments', appointmentsRoutes);
 router.use('/queue', queueRoutes);
 router.use('/admin/reports', reportsRoutes);
 router.use('/admin/dashboard', dashboardRoutes);
-router.use('/staff', staffRoutes);
 router.use('/doctor', doctorRoutes);
 
 module.exports = router;
