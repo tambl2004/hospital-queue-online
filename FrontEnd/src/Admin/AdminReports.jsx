@@ -13,6 +13,21 @@ import {
 import Layout from './Layout';
 import { adminService } from '../services/adminService';
 import StatCard from '../components/Admin/StatCard';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 
 /**
  * ADMIN REPORTS PAGE
@@ -162,59 +177,109 @@ const AdminReports = () => {
       );
     }
 
-    const data = reportsData.daily_series;
-    const maxValue = Math.max(...data.map(d => d.total), 1);
-    const chartHeight = 250;
+    // Format data for Recharts
+    const chartData = reportsData.daily_series.map(item => ({
+      date: new Date(item.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+      fullDate: item.date,
+      lượt: item.total
+    }));
 
     return (
-      <div className="relative" style={{ height: `${chartHeight + 60}px` }}>
-        {/* Y-axis labels */}
-        <div className="absolute left-0 top-0 bottom-12 w-12 flex flex-col justify-between text-xs text-gray-500">
-          <span>{maxValue}</span>
-          <span>{Math.floor(maxValue / 2)}</span>
-          <span>0</span>
-        </div>
+      <ResponsiveContainer width="100%" height={350}>
+        <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis 
+            dataKey="date" 
+            angle={-45}
+            textAnchor="end"
+            height={80}
+            tick={{ fontSize: 12 }}
+          />
+          <YAxis 
+            tick={{ fontSize: 12 }}
+            label={{ value: 'Số lượt', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
+          />
+          <Tooltip 
+            contentStyle={{ 
+              backgroundColor: '#fff', 
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '8px'
+            }}
+            labelFormatter={(label) => `Ngày: ${label}`}
+            formatter={(value) => [`${value} lượt`, 'Số lượt']}
+          />
+          <Legend />
+          <Bar 
+            dataKey="lượt" 
+            fill="#3b82f6" 
+            radius={[8, 8, 0, 0]}
+            name="Số lượt đăng ký"
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  };
 
-        {/* Chart area */}
-        <div className="ml-14 h-full">
-          <div className="relative" style={{ height: `${chartHeight}px` }}>
-            {/* Grid lines */}
-            <div className="absolute inset-0 flex flex-col justify-between">
-              {[0, 1, 2].map(i => (
-                <div key={i} className="border-t border-gray-200"></div>
-              ))}
-            </div>
-
-            {/* Bars */}
-            <div className="absolute inset-0 flex items-end gap-1 px-2">
-              {data.map((item, index) => {
-                const height = (item.total / maxValue) * 100;
-                return (
-                  <div
-                    key={index}
-                    className="flex-1 flex flex-col items-center group relative"
-                  >
-                    <div
-                      className="w-full bg-blue-500 hover:bg-blue-600 rounded-t transition-colors cursor-pointer relative"
-                      style={{ height: `${height}%` }}
-                      title={`${item.date}: ${item.total} lượt`}
-                    >
-                      {height > 10 && (
-                        <span className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs text-gray-600 whitespace-nowrap">
-                          {item.total}
-                        </span>
-                      )}
-                    </div>
-                    <span className="mt-1 text-xs text-gray-600 transform -rotate-45 origin-left whitespace-nowrap" style={{ transformOrigin: 'top left' }}>
-                      {new Date(item.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+  // Render status breakdown chart
+  const renderStatusChart = () => {
+    if (!reportsData?.status_breakdown || reportsData.status_breakdown.length === 0) {
+      return (
+        <div className="h-64 flex items-center justify-center text-gray-400">
+          <p>Không có dữ liệu</p>
         </div>
-      </div>
+      );
+    }
+
+    const COLORS = {
+      WAITING: '#eab308',
+      CALLED: '#3b82f6',
+      IN_PROGRESS: '#a855f7',
+      DONE: '#22c55e',
+      CANCELLED: '#ef4444',
+      SKIPPED: '#6b7280'
+    };
+
+    const chartData = reportsData.status_breakdown.map(item => ({
+      name: statusLabels[item.status] || item.status,
+      value: item.count,
+      status: item.status
+    }));
+
+    return (
+      <ResponsiveContainer width="100%" height={350}>
+        <PieChart>
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+            outerRadius={100}
+            fill="#8884d8"
+            dataKey="value"
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[entry.status] || '#8884d8'} />
+            ))}
+          </Pie>
+          <Tooltip 
+            contentStyle={{ 
+              backgroundColor: '#fff', 
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '8px'
+            }}
+            formatter={(value) => [`${value} lượt`, 'Số lượng']}
+          />
+          <Legend 
+            formatter={(value, entry) => {
+              const item = chartData.find(d => d.name === value);
+              return `${value}: ${item?.value || 0} lượt`;
+            }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
     );
   };
 
@@ -410,33 +475,7 @@ const AdminReports = () => {
                   <FaList className="text-gray-600" />
                   <h2 className="text-xl font-semibold text-gray-800">Phân bổ theo trạng thái</h2>
                 </div>
-                {reportsData.status_breakdown && reportsData.status_breakdown.length > 0 ? (
-                  <div className="space-y-3">
-                    {reportsData.status_breakdown.map((item, index) => {
-                      const percentage = reportsData.summary.total > 0
-                        ? ((item.count / reportsData.summary.total) * 100).toFixed(1)
-                        : 0;
-                      return (
-                        <div key={index} className="space-y-1">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-700">{statusLabels[item.status] || item.status}</span>
-                            <span className="font-semibold text-gray-800">
-                              {item.count} ({percentage}%)
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-blue-500 h-2 rounded-full transition-all"
-                              style={{ width: `${percentage}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-gray-400 text-center py-8">Không có dữ liệu</p>
-                )}
+                {renderStatusChart()}
               </div>
             </div>
 

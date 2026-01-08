@@ -173,6 +173,17 @@ exports.getAppointments = async (req, res, next) => {
     // Format response data
     const formattedAppointments = appointments.map((apt) => ({
       id: apt.id,
+      patient_id: apt.patient_id,
+      patient: {
+        id: apt.patient_id,
+        full_name: apt.patient_name,
+        phone: apt.patient_phone,
+        email: apt.patient_email,
+      },
+      // Also include flat properties for backward compatibility
+      patient_name: apt.patient_name,
+      patient_phone: apt.patient_phone,
+      patient_email: apt.patient_email,
       appointment_date: apt.appointment_date,
       appointment_time: apt.appointment_time,
       status: apt.status,
@@ -192,10 +203,15 @@ exports.getAppointments = async (req, res, next) => {
             }
           : null,
       },
+      // Also include flat properties for backward compatibility
+      doctor_id: apt.doctor_id,
+      doctor_name: apt.doctor_name,
       department: {
         id: apt.department_id,
         name: apt.department_name,
       },
+      department_id: apt.department_id,
+      department_name: apt.department_name,
       room: apt.room_id
         ? {
             id: apt.room_id,
@@ -203,6 +219,9 @@ exports.getAppointments = async (req, res, next) => {
             room_name: apt.room_name,
           }
         : null,
+      room_id: apt.room_id,
+      room_name: apt.room_name,
+      schedule_id: apt.schedule_id,
       created_at: apt.created_at,
       updated_at: apt.updated_at,
     }));
@@ -302,6 +321,21 @@ exports.getAppointmentById = async (req, res, next) => {
     // Format response
     const formattedAppointment = {
       id: appointment.id,
+      patient_id: appointment.patient_id,
+      patient: {
+        id: appointment.patient_id,
+        full_name: appointment.patient_name,
+        phone: appointment.patient_phone,
+        email: appointment.patient_email,
+        gender: appointment.patient_gender,
+        date_of_birth: appointment.patient_dob,
+      },
+      // Also include flat properties for backward compatibility
+      patient_name: appointment.patient_name,
+      patient_phone: appointment.patient_phone,
+      patient_email: appointment.patient_email,
+      patient_gender: appointment.patient_gender,
+      patient_dob: appointment.patient_dob,
       appointment_date: appointment.appointment_date,
       appointment_time: appointment.appointment_time,
       status: appointment.status,
@@ -325,10 +359,19 @@ exports.getAppointmentById = async (req, res, next) => {
             }
           : null,
       },
+      // Also include flat properties for backward compatibility
+      doctor_id: appointment.doctor_id,
+      doctor_name: appointment.doctor_name,
+      doctor_email: appointment.doctor_email,
+      doctor_phone: appointment.doctor_phone,
+      experience_years: appointment.experience_years,
+      rating_avg: appointment.rating_avg,
       department: {
         id: appointment.department_id,
         name: appointment.department_name,
       },
+      department_id: appointment.department_id,
+      department_name: appointment.department_name,
       room: appointment.room_id
         ? {
             id: appointment.room_id,
@@ -336,6 +379,12 @@ exports.getAppointmentById = async (req, res, next) => {
             room_name: appointment.room_name,
           }
         : null,
+      room_id: appointment.room_id,
+      room_name: appointment.room_name,
+      schedule_id: appointment.schedule_id,
+      start_time: appointment.start_time,
+      end_time: appointment.end_time,
+      max_patients: appointment.max_patients,
       created_at: appointment.created_at,
       updated_at: appointment.updated_at,
     };

@@ -11,12 +11,12 @@ import {
 import appointmentService from '../../services/appointmentService';
 
 /**
- * APPOINTMENT DETAIL DRAWER
- * Drawer hiển thị chi tiết thông tin lượt đăng ký khám
+ * APPOINTMENT DETAIL MODAL
+ * Modal hiển thị chi tiết thông tin lượt đăng ký khám ở giữa màn hình
  * 
  * Props:
  * - appointment: Object - Thông tin appointment
- * - onClose: Function - Callback khi đóng drawer
+ * - onClose: Function - Callback khi đóng modal
  * - onRefresh: Function - Callback để reload danh sách
  */
 
@@ -62,32 +62,37 @@ const AppointmentDetailDrawer = ({ appointment, onClose, onRefresh }) => {
     <>
       {/* Overlay */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
         onClick={onClose}
       />
 
-      {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-xl z-50 overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">
-              Chi tiết lượt đăng ký khám
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Mã: #{appointment.id}
-            </p>
+      {/* Modal Container - Centered */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {/* Modal */}
+        <div 
+          className="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-fadeIn"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">
+                Chi tiết lượt đăng ký khám
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Mã: #{appointment.id}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <FaTimes className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <FaTimes className="w-5 h-5" />
-          </button>
-        </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
+          {/* Content - Scrollable */}
+          <div className="p-6 space-y-6 overflow-y-auto flex-1">
           {/* Status Badge */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -220,18 +225,24 @@ const AppointmentDetailDrawer = ({ appointment, onClose, onRefresh }) => {
                 label="Cập nhật lần cuối" 
                 value={new Date(appointment.updated_at).toLocaleString('vi-VN')} 
               />
-              <InfoRow label="ID Lịch khám" value={`#${appointment.schedule_id}`} />
+              <InfoRow 
+                label="ID Lịch khám" 
+                value={appointment.schedule_id ? `#${appointment.schedule_id}` : 'Chưa có'} 
+              />
             </div>
           </div>
+          </div>
 
-          {/* Actions (nếu cần thêm) */}
-          <div className="flex gap-3 pt-4 border-t border-gray-200">
-            <button
-              onClick={onClose}
-              className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              Đóng
-            </button>
+          {/* Footer - Actions */}
+          <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 flex-shrink-0">
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
       </div>

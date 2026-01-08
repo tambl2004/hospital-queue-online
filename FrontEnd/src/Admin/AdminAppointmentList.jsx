@@ -102,8 +102,44 @@ const AdminAppointmentList = () => {
       const response = await appointmentService.getAppointments(params);
       
       if (response.success) {
-        setAppointments(response.data.appointments);
-        setPagination(response.data.pagination);
+        // Backend returns data as array and pagination at root level
+        const appointmentsData = Array.isArray(response.data) ? response.data : (response.data?.appointments || []);
+        
+        // Transform nested structure to flat structure expected by the component
+        const transformedAppointments = appointmentsData.map(apt => ({
+          ...apt,
+          // Flatten nested objects
+          patient_name: apt.patient?.full_name || apt.patient_name || 'N/A',
+          patient_phone: apt.patient?.phone || apt.patient_phone || '',
+          patient_email: apt.patient?.email || apt.patient_email || '',
+          doctor_name: apt.doctor?.full_name || apt.doctor_name || 'N/A',
+          doctor_id: apt.doctor?.id || apt.doctor_id,
+          department_name: apt.department?.name || apt.department_name || 'N/A',
+          department_id: apt.department?.id || apt.department_id,
+          room_name: apt.room?.room_name || apt.room_name || '',
+          room_id: apt.room?.id || apt.room_id
+        }));
+        
+        setAppointments(transformedAppointments);
+        
+        // Ensure pagination always has valid structure
+        const paginationData = response.pagination || response.data?.pagination;
+        if (paginationData) {
+          setPagination({
+            page: paginationData.page || 1,
+            limit: paginationData.limit || 20,
+            total: paginationData.total || 0,
+            totalPages: paginationData.totalPages || 0
+          });
+        } else {
+          // Keep current pagination if backend doesn't return it
+          setPagination(prev => prev || {
+            page: 1,
+            limit: 20,
+            total: 0,
+            totalPages: 0
+          });
+        }
       }
     } catch (err) {
       console.error('Error loading appointments:', err);

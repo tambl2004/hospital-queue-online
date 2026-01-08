@@ -19,6 +19,18 @@ import {
   FaUser,
   FaList
 } from 'react-icons/fa';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 
 /**
  * ADMIN DASHBOARD
@@ -119,59 +131,47 @@ const Dashboard = () => {
       );
     }
 
-    const data = dashboardData.chart_7_days;
-    const maxValue = Math.max(...data.map(d => d.total), 1);
-    const chartHeight = 200;
+    // Format data for Recharts
+    const chartData = dashboardData.chart_7_days.map(item => ({
+      date: new Date(item.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+      fullDate: item.date,
+      lượt: item.total
+    }));
 
     return (
-      <div className="relative" style={{ height: `${chartHeight + 60}px` }}>
-        {/* Y-axis labels */}
-        <div className="absolute left-0 top-0 bottom-12 w-12 flex flex-col justify-between text-xs text-gray-500">
-          <span>{maxValue}</span>
-          <span>{Math.floor(maxValue / 2)}</span>
-          <span>0</span>
-        </div>
-
-        {/* Chart area */}
-        <div className="ml-14 h-full">
-          <div className="relative" style={{ height: `${chartHeight}px` }}>
-            {/* Grid lines */}
-            <div className="absolute inset-0 flex flex-col justify-between">
-              {[0, 1, 2].map(i => (
-                <div key={i} className="border-t border-gray-200"></div>
-              ))}
-            </div>
-
-            {/* Bars */}
-            <div className="absolute inset-0 flex items-end gap-1 px-2">
-              {data.map((item, index) => {
-                const height = (item.total / maxValue) * 100;
-                return (
-                  <div
-                    key={index}
-                    className="flex-1 flex flex-col items-center group relative"
-                  >
-                    <div
-                      className="w-full bg-blue-500 hover:bg-blue-600 rounded-t transition-colors cursor-pointer"
-                      style={{ height: `${height}%` }}
-                      title={`${item.date}: ${item.total} lượt`}
-                    >
-                      {height > 10 && (
-                        <span className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs text-gray-600 whitespace-nowrap">
-                          {item.total}
-                        </span>
-                      )}
-                    </div>
-                    <span className="mt-1 text-xs text-gray-600" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-                      {new Date(item.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis 
+            dataKey="date" 
+            angle={-45}
+            textAnchor="end"
+            height={80}
+            tick={{ fontSize: 12 }}
+          />
+          <YAxis 
+            tick={{ fontSize: 12 }}
+            label={{ value: 'Số lượt', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
+          />
+          <Tooltip 
+            contentStyle={{ 
+              backgroundColor: '#fff', 
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '8px'
+            }}
+            labelFormatter={(label) => `Ngày: ${label}`}
+            formatter={(value) => [`${value} lượt`, 'Số lượt']}
+          />
+          <Legend />
+          <Bar 
+            dataKey="lượt" 
+            fill="#3b82f6" 
+            radius={[8, 8, 0, 0]}
+            name="Số lượt đăng ký"
+          />
+        </BarChart>
+      </ResponsiveContainer>
     );
   };
 
