@@ -61,27 +61,76 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Đăng ký tài khoản
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Tạo tài khoản mới để sử dụng dịch vụ
-          </p>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Full Screen Cosmic Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-900 to-black">
+        {/* Stars */}
+        <div className="absolute inset-0">
+          {[...Array(100)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full bg-white"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${Math.random() * 3 + 1}px`,
+                height: `${Math.random() * 3 + 1}px`,
+                opacity: Math.random() * 0.8 + 0.2,
+                animation: `twinkle ${Math.random() * 3 + 2}s infinite`
+              }}
+            />
+          ))}
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-              <span className="block sm:inline">{error}</span>
-            </div>
-          )}
+        {/* Moon */}
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-32 h-32 rounded-full bg-gradient-to-br from-blue-200 to-blue-400 opacity-60 blur-xl" />
+        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 w-24 h-24 rounded-full bg-blue-300 opacity-40" />
+        
+        {/* Mountains/Planets */}
+        <div className="absolute bottom-0 left-0 right-0 h-64">
+          <div className="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-gray-900 via-gray-800 to-transparent opacity-60">
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gray-900 transform rotate-45 origin-bottom-left opacity-80" />
+            <div className="absolute bottom-0 left-24 w-40 h-40 bg-gray-800 transform rotate-45 origin-bottom-left opacity-70" />
+            <div className="absolute bottom-0 right-32 w-36 h-36 bg-gray-900 transform rotate-45 origin-bottom-right opacity-80" />
+          </div>
+        </div>
+        
+        {/* Large Planet */}
+        <div className="absolute top-32 right-16 w-48 h-48 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 opacity-50 blur-sm" />
+      </div>
 
-          <div className="space-y-4">
+      {/* Register Form - Centered */}
+      <div className="relative min-h-screen flex items-center justify-center p-8 overflow-y-auto">
+        <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex">
+          {/* Left Side - Image */}
+          <div className="hidden lg:flex lg:w-1/2 bg-gray-100 items-center justify-center">
+            <img 
+              src="/image/dangki.png" 
+              alt="Register illustration" 
+              className="w-full h-full object-cover rounded-l-3xl"
+              style={{ minHeight: '600px' }}
+            />
+          </div>
+
+          {/* Right Side - Register Form */}
+          <div className="w-full lg:w-1/2 p-8 flex flex-col justify-center">
+            {/* Header */}
+            <div className="mb-4">
+              <h1 className="text-4xl font-bold text-gray-900">
+                Xin chào
+              </h1>
+            </div>
+
+            {error && (
+              <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" role="alert">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Full Name */}
             <div>
-              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-1">
                 Họ và tên
               </label>
               <input
@@ -89,15 +138,16 @@ function Register() {
                 name="full_name"
                 type="text"
                 required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 placeholder="Nhập họ và tên"
                 value={formData.full_name}
                 onChange={handleChange}
               />
             </div>
 
+            {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
               </label>
               <input
@@ -106,15 +156,16 @@ function Register() {
                 type="email"
                 autoComplete="email"
                 required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 placeholder="Nhập email"
                 value={formData.email}
                 onChange={handleChange}
               />
             </div>
 
+            {/* Phone */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                 Số điện thoại
               </label>
               <input
@@ -122,22 +173,23 @@ function Register() {
                 name="phone"
                 type="tel"
                 required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 placeholder="Nhập số điện thoại"
                 value={formData.phone}
                 onChange={handleChange}
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Gender and Date of Birth */}
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
                   Giới tính
                 </label>
                 <select
                   id="gender"
                   name="gender"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                   value={formData.gender}
                   onChange={handleChange}
                 >
@@ -149,22 +201,23 @@ function Register() {
               </div>
 
               <div>
-                <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700 mb-1">
                   Ngày sinh
                 </label>
                 <input
                   id="date_of_birth"
                   name="date_of_birth"
                   type="date"
-                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                   value={formData.date_of_birth}
                   onChange={handleChange}
                 />
               </div>
             </div>
 
+            {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Mật khẩu
               </label>
               <input
@@ -173,15 +226,16 @@ function Register() {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
                 value={formData.password}
                 onChange={handleChange}
               />
             </div>
 
+            {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 Xác nhận mật khẩu
               </label>
               <input
@@ -190,37 +244,45 @@ function Register() {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 placeholder="Nhập lại mật khẩu"
                 value={formData.confirmPassword}
                 onChange={handleChange}
               />
             </div>
-          </div>
 
-          <div>
+            {/* Register Button */}
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
               {loading ? 'Đang đăng ký...' : 'Đăng ký'}
             </button>
-          </div>
 
-          <div className="text-center">
-            <span className="text-sm text-gray-600">
-              Đã có tài khoản?{' '}
-              <Link
-                to="/auth/login"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                Đăng nhập ngay
-              </Link>
-            </span>
+            {/* Login link */}
+            <div className="text-center pt-2">
+              <span className="text-sm text-gray-500">
+                Đã có tài khoản?{' '}
+                <Link
+                  to="/auth/login"
+                  className="font-medium text-gray-900 hover:text-orange-600 transition-colors"
+                >
+                  Đăng nhập
+                </Link>
+              </span>
+            </div>
+            </form>
           </div>
-        </form>
+        </div>
       </div>
+
+      <style>{`
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.2; }
+          50% { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
