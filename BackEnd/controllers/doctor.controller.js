@@ -32,7 +32,8 @@ exports.getDashboardData = async (req, res, next) => {
         d.room_id,
         r.room_name,
         r.room_code,
-        d.rating_avg
+        d.rating_avg,
+        d.avatar_url
       FROM doctors d
       INNER JOIN users u ON d.user_id = u.id
       INNER JOIN departments dept ON d.department_id = dept.id
@@ -94,7 +95,8 @@ exports.getDashboardData = async (req, res, next) => {
           department_name: doctor.department_name,
           room_name: doctor.room_name || null,
           room_code: doctor.room_code || null,
-          rating_avg: doctor.rating_avg ? parseFloat(doctor.rating_avg) : 0
+          rating_avg: doctor.rating_avg ? parseFloat(doctor.rating_avg) : 0,
+          avatar_url: doctor.avatar_url || null,
         },
         queue_info: {
           current: current,
@@ -419,6 +421,54 @@ exports.getRatings = async (req, res, next) => {
 
   } catch (error) {
     console.error('Error fetching doctor ratings:', error);
+    next(error);
+  }
+};
+
+/**
+ * Cập nhật ảnh hồ sơ bác sĩ
+ * POST /api/doctor/profile/avatar
+ */
+exports.updateAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng chọn file ảnh',
+      });
+    }
+
+    const pool = getPool();
+    const userId = req.user.id;
+    const avatarUrl = `/uploads/doctors/${req.file.filename}`;
+
+    // Lấy doctor_id từ user_id
+    const [doctors] = await pool.execute(
+      'SELECT id FROM doctors WHERE user_id = ? AND is_active = 1',
+      [userId]
+    );
+
+    if (doctors.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy thông tin bác sĩ',
+      });
+    }
+
+    const doctorId = doctors[0].id;
+
+    await pool.execute('UPDATE doctors SET avatar_url = ? WHERE id = ?', [
+      avatarUrl,
+      doctorId,
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Cập nhật ảnh hồ sơ thành công',
+      data: { avatar_url: avatarUrl },
+    });
+  } catch (error) {
+    console.error('Error updating doctor avatar:', error);
     next(error);
   }
 };

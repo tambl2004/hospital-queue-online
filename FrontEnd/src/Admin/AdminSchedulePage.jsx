@@ -27,7 +27,6 @@ const AdminSchedulePage = () => {
   // Bulk create form
   const [bulkForm, setBulkForm] = useState({
     shift_type: 'morning',
-    slot_minutes: 15,
     max_patients: 1,
   });
 
@@ -130,7 +129,6 @@ const AdminSchedulePage = () => {
         doctor_id: selectedDoctorId,
         work_date: selectedDate,
         shift_type: bulkForm.shift_type,
-        slot_minutes: parseInt(bulkForm.slot_minutes),
         max_patients: parseInt(bulkForm.max_patients),
       });
 
@@ -140,7 +138,6 @@ const AdminSchedulePage = () => {
         // Reset bulk form
         setBulkForm({
           shift_type: 'morning',
-          slot_minutes: 15,
           max_patients: 1,
         });
       } else {
@@ -357,7 +354,7 @@ const AdminSchedulePage = () => {
         {selectedDoctorId && selectedDate && (
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Tạo lịch tự động</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Shift type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Mẫu ca làm</label>
@@ -370,22 +367,6 @@ const AdminSchedulePage = () => {
                   <option value="morning">Ca sáng (08:00-12:00)</option>
                   <option value="afternoon">Ca chiều (13:30-17:30)</option>
                   <option value="full">Cả ngày (08:00-17:30)</option>
-                </select>
-              </div>
-
-              {/* Slot minutes */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Độ dài slot</label>
-                <select
-                  value={bulkForm.slot_minutes}
-                  onChange={(e) => setBulkForm({ ...bulkForm, slot_minutes: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={submitting}
-                >
-                  <option value="10">10 phút</option>
-                  <option value="15">15 phút</option>
-                  <option value="20">20 phút</option>
-                  <option value="30">30 phút</option>
                 </select>
               </div>
 

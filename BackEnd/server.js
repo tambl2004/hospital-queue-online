@@ -1,10 +1,13 @@
 // backend/server.js
+// Load environment variables FIRST before requiring any other modules
+// Always load BackEnd/.env regardless of where Node is started (cwd)
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
 const app = require('./app');
 const http = require('http');
 const { Server } = require('socket.io');
 const { setupQueueHandlers } = require('./socketHandlers/queue.handler');
-
-require('dotenv').config();
 
 const PORT = process.env.PORT || 5000;
 

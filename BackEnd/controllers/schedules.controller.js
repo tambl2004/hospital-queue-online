@@ -111,9 +111,9 @@ const getSchedules = async (req, res, next) => {
 };
 
 /**
- * Tạo lịch tự động (Bulk create)
+ * Tạo lịch tự động (Bulk create) theo ca
  * POST /admin/schedules/bulk
- * Body: { doctor_id, work_date, shift_type, slot_minutes, max_patients }
+ * Body: { doctor_id, work_date, shift_type, max_patients }
  */
 const createBulkSchedules = async (req, res, next) => {
   const connection = await getPool().getConnection();
@@ -121,7 +121,7 @@ const createBulkSchedules = async (req, res, next) => {
   try {
     await connection.beginTransaction();
 
-    const { doctor_id, work_date, shift_type, slot_minutes = 15, max_patients = 1 } = req.body;
+    const { doctor_id, work_date, shift_type, max_patients = 1 } = req.body;
 
     // Validate
     if (!doctor_id || !work_date || !shift_type) {
@@ -135,13 +135,6 @@ const createBulkSchedules = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: 'shift_type phải là: morning, afternoon, hoặc full',
-      });
-    }
-
-    if (![10, 15, 20, 30].includes(parseInt(slot_minutes))) {
-      return res.status(400).json({
-        success: false,
-        message: 'slot_minutes phải là: 10, 15, 20, hoặc 30',
       });
     }
 
@@ -180,86 +173,49 @@ const createBulkSchedules = async (req, res, next) => {
     };
 
     const shift = shifts[shift_type];
-    const slotDuration = parseInt(slot_minutes);
 
-    // Generate danh sách slot
-    const slots = [];
-    const startTime = new Date(`2000-01-01 ${shift.start}`);
-    const endTime = new Date(`2000-01-01 ${shift.end}`);
-
-    let currentTime = new Date(startTime);
-
-    while (currentTime < endTime) {
-      const slotStart = new Date(currentTime);
-      const slotEnd = new Date(currentTime.getTime() + slotDuration * 60000);
-
-      // Đảm bảo slot không vượt quá end time
-      if (slotEnd > endTime) {
-        break;
-      }
-
-      slots.push({
-        start_time: slotStart.toTimeString().slice(0, 8),
-        end_time: slotEnd.toTimeString().slice(0, 8),
-      });
-
-      currentTime = slotEnd;
-    }
-
-    if (slots.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Không thể tạo slot với cấu hình này',
-      });
-    }
+    // Slot duy nhất cho cả ca
+    const slot = {
+      start_time: shift.start,
+      end_time: shift.end,
+    };
 
     // Lấy danh sách slot đã tồn tại để tránh trùng lặp
     const [existingSlots] = await connection.execute(
       `SELECT start_time, end_time FROM doctor_schedules 
-       WHERE doctor_id = ? AND work_date = ?`,
-      [doctor_id, work_date]
+       WHERE doctor_id = ? AND work_date = ? 
+         AND start_time = ? AND end_time = ?`,
+      [doctor_id, work_date, slot.start_time, slot.end_time]
     );
 
-    const existingSet = new Set(
-      existingSlots.map((s) => `${s.start_time}-${s.end_time}`)
-    );
-
-    // Lọc bỏ các slot đã tồn tại
-    const newSlots = slots.filter(
-      (slot) => !existingSet.has(`${slot.start_time}-${slot.end_time}`)
-    );
-
-    if (newSlots.length === 0) {
+    if (existingSlots.length > 0) {
       return res.status(400).json({
         success: false,
-        message: 'Tất cả slot đã tồn tại',
+        message: 'Slot cho ca này đã tồn tại',
       });
     }
 
-    // Insert batch
+    // Insert một slot cho cả ca
     const insertQuery = `INSERT INTO doctor_schedules 
       (doctor_id, work_date, start_time, end_time, max_patients, is_active) 
-      VALUES ?`;
+      VALUES (?, ?, ?, ?, ?, 1)`;
 
-    const values = newSlots.map((slot) => [
+    await connection.execute(insertQuery, [
       doctor_id,
       work_date,
       slot.start_time,
       slot.end_time,
       max_patients,
-      1,
     ]);
-
-    await connection.query(insertQuery, [values]);
 
     await connection.commit();
 
     res.status(201).json({
       success: true,
-      message: `Đã tạo ${newSlots.length} slot thành công`,
+      message: 'Đã tạo slot cho ca làm việc thành công',
       data: {
-        created_count: newSlots.length,
-        skipped_count: slots.length - newSlots.length,
+        created_count: 1,
+        skipped_count: 0,
       },
     });
   } catch (error) {

@@ -13,6 +13,7 @@ import appointmentService from '../services/appointmentService';
 import { adminService } from '../services/adminService';
 import AppointmentDetailDrawer from '../components/Admin/AppointmentDetailDrawer';
 import ConfirmAppointmentActionModal from '../components/Admin/ConfirmAppointmentActionModal';
+import { toast } from 'react-toastify';
 
 /**
  * ADMIN APPOINTMENT LIST PAGE
@@ -275,11 +276,11 @@ const AdminAppointmentList = () => {
         setActionType(null);
 
         // Show success message
-        alert(`${action.label} thành công!`);
+        toast.success(`${action.label} thành công!`);
       }
     } catch (err) {
       console.error('Error performing action:', err);
-      alert(err.response?.data?.message || 'Có lỗi xảy ra khi thực hiện thao tác');
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi thực hiện thao tác');
     }
   };
 

@@ -9,6 +9,7 @@ import {
   FaPhone 
 } from 'react-icons/fa';
 import appointmentService from '../../services/appointmentService';
+import { toast } from 'react-toastify';
 
 /**
  * CONFIRM APPOINTMENT ACTION MODAL
@@ -92,7 +93,7 @@ const ConfirmAppointmentActionModal = ({ appointment, action, onConfirm, onClose
   const handleConfirm = async () => {
     // Validate lý do nếu cần
     if (needsReason && !reason.trim()) {
-      alert('Vui lòng nhập lý do');
+      toast.error('Vui lòng nhập lý do');
       return;
     }
 

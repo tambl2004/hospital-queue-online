@@ -5,6 +5,7 @@ import AppointmentList from '../components/Patient/AppointmentList';
 import EmptyAppointments from '../components/Patient/EmptyAppointments';
 import CancelAppointmentModal from '../components/Patient/CancelAppointmentModal';
 import { FaList } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 function PatientAppointmentsPage() {
   const [appointments, setAppointments] = useState([]);
@@ -95,7 +96,7 @@ function PatientAppointmentsPage() {
       setShowCancelModal(false);
       setSelectedAppointment(null);
     } catch (error) {
-      alert(error.response?.data?.message || 'Không thể hủy lịch khám');
+      toast.error(error.response?.data?.message || 'Không thể hủy lịch khám');
     } finally {
       setCancelling(false);
     }

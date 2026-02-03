@@ -40,6 +40,21 @@ export const authService = {
     return response.data;
   },
 
+  // Cập nhật hồ sơ (full_name, phone, gender, date_of_birth)
+  updateProfile: async (data) => {
+    const response = await api.put('/auth/profile', data);
+    return response.data;
+  },
+
+  // Đổi mật khẩu
+  changePassword: async (currentPassword, newPassword) => {
+    const response = await api.put('/auth/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
+    return response.data;
+  },
+
   // Lấy thông tin user hiện tại từ localStorage
   getCurrentUser: () => {
     const user = localStorage.getItem('user');
@@ -49,6 +64,11 @@ export const authService = {
   // Kiểm tra đã đăng nhập
   isAuthenticated: () => {
     return !!localStorage.getItem('token');
+  },
+
+  // Đăng nhập Google - redirect đến backend
+  loginWithGoogle: () => {
+    window.location.href = '/api/auth/google';
   },
 };
 

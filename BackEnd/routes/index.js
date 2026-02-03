@@ -16,6 +16,7 @@ const queueRoutes = require('./queue.routes');
 const reportsRoutes = require('./reports.routes');
 const dashboardRoutes = require('./dashboard.routes');
 const doctorRoutes = require('./doctor.routes');
+const faqsRoutes = require('./faqs.routes');
 
 router.use('/auth', authRoutes);
 router.use('/admin/users', usersRoutes);
@@ -31,6 +32,8 @@ router.use('/queue', queueRoutes);
 router.use('/admin/reports', reportsRoutes);
 router.use('/admin/dashboard', dashboardRoutes);
 router.use('/doctor', doctorRoutes);
+router.use('/faqs', faqsRoutes);
+router.use('/admin/faqs', faqsRoutes);
 
 module.exports = router;
 

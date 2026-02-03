@@ -55,15 +55,15 @@ function MyQueueNumberCard({ queueNumber, status }) {
   const statusInfo = getStatusInfo(status);
 
   return (
-    <div className={`${statusInfo.bgColor} rounded-xl p-8 border-2 ${statusInfo.borderColor} text-center shadow-lg transition-all duration-300`}>
+    <div className={`${statusInfo.bgColor} rounded-lg p-6 border ${statusInfo.borderColor} text-center shadow-md transition-all duration-300`}>
       <div className="flex items-center justify-center gap-2 mb-3">
         <FaHashtag className={`${statusInfo.color} text-xl`} />
         <span className={`${statusInfo.color} text-base font-semibold`}>Số của tôi</span>
       </div>
-      <div className={`${statusInfo.color} text-7xl font-bold mb-4 drop-shadow-lg`}>
+      <div className={`${statusInfo.color} text-6xl font-bold mb-3`}>
         {queueNumber || 'N/A'}
       </div>
-      <div className={`${statusInfo.color} text-base font-bold bg-white/50 rounded-full px-4 py-2 inline-block`}>
+      <div className={`${statusInfo.color} text-sm font-semibold bg-white/60 rounded-full px-4 py-1 inline-block`}>
         {statusInfo.label}
       </div>
     </div>

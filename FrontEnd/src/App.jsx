@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './Auth/Login';
+import LandingPage from './LandingPage';
+import Login from './auth/Login';
 import Register from './Auth/Register';
 import ForgotPassword from './Auth/ForgotPassword';
+import GoogleCallback from './Auth/GoogleCallback';
 import Dashboard from './Admin/Dashboard';
 import AdminDepartmentList from './Admin/AdminDepartmentList';
 import AdminDoctorList from './Admin/AdminDoctorList';
@@ -11,6 +13,7 @@ import AdminUserList from './Admin/AdminUserList';
 import AdminAppointmentList from './Admin/AdminAppointmentList';
 import AdminQueueDashboard from './Admin/AdminQueueDashboard';
 import AdminReports from './Admin/AdminReports';
+import AdminFAQList from './Admin/AdminFAQList';
 import DoctorDashboard from './Doctor/DoctorDashboard';
 import DoctorQueue from './Doctor/DoctorQueue';
 import DoctorSchedule from './Doctor/DoctorSchedule';
@@ -31,143 +34,160 @@ import QueueTrackingList from './Patient/QueueTrackingList';
 import PatientProfile from './Patient/PatientProfile';
 import DoctorReview from './Patient/DoctorReview';
 import { authService } from './services/authService';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
     <Router>
-      <Routes>
-        {/* Root - Redirect to Login */}
-        <Route path="/" element={<Navigate to="/auth/login" replace />} />
-        
-        {/* Auth Routes */}
-        <Route path="/auth/login" element={<Login />} />
-        <Route path="/auth/register" element={<Register />} />
-        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-        
-        {/* Auth Routes (alias) */}
-        <Route path="/login" element={<Navigate to="/auth/login" replace />} />
-        <Route path="/register" element={<Navigate to="/auth/register" replace />} />
-        
-        {/* Public Patient Routes (only accessible after login or for browsing) */}
-        <Route path="/departments" element={<DepartmentList />} />
-        <Route path="/departments/:departmentId/doctors" element={<DoctorList />} />
-        <Route path="/doctors" element={<DoctorList />} />
-        <Route path="/doctors/:id" element={<DoctorDetail />} />
-        
-        {/* Protected Routes */}
-        <Route path="/admin" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/admin/users" element={<ProtectedRoute><AdminUserList /></ProtectedRoute>} />
-        <Route path="/admin/departments" element={<ProtectedRoute><AdminDepartmentList /></ProtectedRoute>} />
-        <Route path="/admin/doctors" element={<ProtectedRoute><AdminDoctorList /></ProtectedRoute>} />
-        <Route path="/admin/rooms" element={<ProtectedRoute><AdminRoomList /></ProtectedRoute>} />
-        <Route path="/admin/schedules" element={<ProtectedRoute><AdminSchedulePage /></ProtectedRoute>} />
-        <Route path="/admin/appointments" element={<ProtectedRoute><AdminAppointmentList /></ProtectedRoute>} />
-        <Route path="/admin/queue" element={<ProtectedRoute><AdminQueueDashboard /></ProtectedRoute>} />
-        <Route path="/admin/statistics" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
-        
-        
-        {/* Doctor Routes */}
-        <Route path="/doctor/dashboard" element={<ProtectedRoute role="DOCTOR"><DoctorDashboard /></ProtectedRoute>} />
-        <Route path="/doctor/queue" element={<ProtectedRoute role="DOCTOR"><DoctorQueue /></ProtectedRoute>} />
-        <Route path="/doctor/schedule" element={<ProtectedRoute role="DOCTOR"><DoctorSchedule /></ProtectedRoute>} />
-        <Route path="/doctor/appointments" element={<ProtectedRoute role="DOCTOR"><DoctorAppointments /></ProtectedRoute>} />
-        <Route path="/doctor/profile" element={<ProtectedRoute role="DOCTOR"><DoctorProfile /></ProtectedRoute>} />
-        <Route path="/doctor/ratings" element={<ProtectedRoute role="DOCTOR"><DoctorRatings /></ProtectedRoute>} />
-        <Route path="/doctor" element={<Navigate to="/doctor/dashboard" replace />} />
-        
-        {/* Patient Protected Routes */}
-        <Route
-          path="/patient/book"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <BookAppointment />
-              </Layout>
-            </ProtectedRoute>
-          }
+      <>
+        <Routes>
+          {/* Root - Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* Auth Routes */}
+          <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/register" element={<Register />} />
+          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+          <Route path="/auth/google/callback" element={<GoogleCallback />} />
+          
+          {/* Auth Routes (alias) */}
+          <Route path="/login" element={<Navigate to="/auth/login" replace />} />
+          <Route path="/register" element={<Navigate to="/auth/register" replace />} />
+          
+          {/* Public Patient Routes (only accessible after login or for browsing) */}
+          <Route path="/departments" element={<DepartmentList />} />
+          <Route path="/departments/:departmentId/doctors" element={<DoctorList />} />
+          <Route path="/doctors" element={<DoctorList />} />
+          <Route path="/doctors/:id" element={<DoctorDetail />} />
+          
+          {/* Protected Routes */}
+          <Route path="/admin" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute><AdminUserList /></ProtectedRoute>} />
+          <Route path="/admin/departments" element={<ProtectedRoute><AdminDepartmentList /></ProtectedRoute>} />
+          <Route path="/admin/doctors" element={<ProtectedRoute><AdminDoctorList /></ProtectedRoute>} />
+          <Route path="/admin/rooms" element={<ProtectedRoute><AdminRoomList /></ProtectedRoute>} />
+          <Route path="/admin/schedules" element={<ProtectedRoute><AdminSchedulePage /></ProtectedRoute>} />
+          <Route path="/admin/appointments" element={<ProtectedRoute><AdminAppointmentList /></ProtectedRoute>} />
+          <Route path="/admin/queue" element={<ProtectedRoute><AdminQueueDashboard /></ProtectedRoute>} />
+          <Route path="/admin/statistics" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
+          <Route path="/admin/faqs" element={<ProtectedRoute><AdminFAQList /></ProtectedRoute>} />
+          
+          
+          {/* Doctor Routes */}
+          <Route path="/doctor/dashboard" element={<ProtectedRoute role="DOCTOR"><DoctorDashboard /></ProtectedRoute>} />
+          <Route path="/doctor/queue" element={<ProtectedRoute role="DOCTOR"><DoctorQueue /></ProtectedRoute>} />
+          <Route path="/doctor/schedule" element={<ProtectedRoute role="DOCTOR"><DoctorSchedule /></ProtectedRoute>} />
+          <Route path="/doctor/appointments" element={<ProtectedRoute role="DOCTOR"><DoctorAppointments /></ProtectedRoute>} />
+          <Route path="/doctor/profile" element={<ProtectedRoute role="DOCTOR"><DoctorProfile /></ProtectedRoute>} />
+          <Route path="/doctor/ratings" element={<ProtectedRoute role="DOCTOR"><DoctorRatings /></ProtectedRoute>} />
+          <Route path="/doctor" element={<Navigate to="/doctor/dashboard" replace />} />
+          
+          {/* Patient Protected Routes */}
+          <Route
+            path="/patient/book"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <BookAppointment />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient/appointments"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MyAppointments />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-appointments"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MyAppointments />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/appointments/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AppointmentDetail />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/queue/:appointmentId"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <QueueTracker />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient/queue"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <QueueTrackingList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient/queue/:appointmentId"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <QueueTracker />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient/profile"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PatientProfile />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient/review/:appointmentId"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <DoctorReview />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/patient" element={<Navigate to="/my-appointments" replace />} />
+        </Routes>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
         />
-        <Route
-          path="/patient/appointments"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <MyAppointments />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/my-appointments"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <MyAppointments />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/appointments/:id"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <AppointmentDetail />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/queue/:appointmentId"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <QueueTracker />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/patient/queue"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <QueueTrackingList />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/patient/queue/:appointmentId"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <QueueTracker />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/patient/profile"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <PatientProfile />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/patient/review/:appointmentId"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <DoctorReview />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/patient" element={<Navigate to="/my-appointments" replace />} />
-      </Routes>
+      </>
     </Router>
   );
 }

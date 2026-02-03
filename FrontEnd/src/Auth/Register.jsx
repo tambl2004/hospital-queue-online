@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
+import { toast } from 'react-toastify';
 
 function Register() {
   const navigate = useNavigate();
@@ -30,12 +31,16 @@ function Register() {
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp');
+      const message = 'Mật khẩu xác nhận không khớp';
+      setError(message);
+      toast.error(message);
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự');
+      const message = 'Mật khẩu phải có ít nhất 6 ký tự';
+      setError(message);
+      toast.error(message);
       return;
     }
 
@@ -52,56 +57,22 @@ function Register() {
       }
 
       // Redirect
+      toast.success('Đăng ký thành công');
       navigate('/patient');
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+      const message =
+        err.response?.data?.message || err.message || 'Đăng ký thất bại. Vui lòng thử lại.';
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Full Screen Cosmic Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-900 to-black">
-        {/* Stars */}
-        <div className="absolute inset-0">
-          {[...Array(100)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full bg-white"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                width: `${Math.random() * 3 + 1}px`,
-                height: `${Math.random() * 3 + 1}px`,
-                opacity: Math.random() * 0.8 + 0.2,
-                animation: `twinkle ${Math.random() * 3 + 2}s infinite`
-              }}
-            />
-          ))}
-        </div>
-        
-        {/* Moon */}
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-32 h-32 rounded-full bg-gradient-to-br from-blue-200 to-blue-400 opacity-60 blur-xl" />
-        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 w-24 h-24 rounded-full bg-blue-300 opacity-40" />
-        
-        {/* Mountains/Planets */}
-        <div className="absolute bottom-0 left-0 right-0 h-64">
-          <div className="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-gray-900 via-gray-800 to-transparent opacity-60">
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gray-900 transform rotate-45 origin-bottom-left opacity-80" />
-            <div className="absolute bottom-0 left-24 w-40 h-40 bg-gray-800 transform rotate-45 origin-bottom-left opacity-70" />
-            <div className="absolute bottom-0 right-32 w-36 h-36 bg-gray-900 transform rotate-45 origin-bottom-right opacity-80" />
-          </div>
-        </div>
-        
-        {/* Large Planet */}
-        <div className="absolute top-32 right-16 w-48 h-48 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 opacity-50 blur-sm" />
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-teal-100 flex items-center justify-center px-4">
       {/* Register Form - Centered */}
-      <div className="relative min-h-screen flex items-center justify-center p-8 overflow-y-auto">
-        <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex">
+      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden flex">
           {/* Left Side - Image */}
           <div className="hidden lg:flex lg:w-1/2 bg-gray-100 items-center justify-center">
             <img 
@@ -119,6 +90,9 @@ function Register() {
               <h1 className="text-4xl font-bold text-gray-900">
                 Xin chào
               </h1>
+              <p className="text-gray-600 text-base">
+              Chào mừng đến với Hệ thống Bệnh viện
+              </p>
             </div>
 
             {error && (
@@ -276,14 +250,7 @@ function Register() {
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.2; }
-          50% { opacity: 1; }
-        }
-      `}</style>
-    </div>
+    
   );
 }
 

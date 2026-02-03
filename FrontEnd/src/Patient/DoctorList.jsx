@@ -121,8 +121,16 @@ function DoctorList() {
                   className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <FaUserMd className="text-blue-600 text-3xl" />
+                    <div className="w-20 h-20 bg-blue-100 rounded-md overflow-hidden flex items-center justify-center flex-shrink-0">
+                      {doctor.avatar_url ? (
+                        <img
+                          src={doctor.avatar_url}
+                          alt={doctor.full_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <FaUserMd className="text-blue-600 text-3xl" />
+                      )}
                     </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-800 mb-2">

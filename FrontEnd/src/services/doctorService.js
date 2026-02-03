@@ -60,6 +60,21 @@ export const doctorService = {
     }
   },
 
+  // Upload avatar bác sĩ
+  async uploadAvatar(formData) {
+    try {
+      const response = await api.post('/doctor/profile/avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading doctor avatar:', error);
+      throw error;
+    }
+  },
+
   // Lấy danh sách đánh giá của Doctor
   async getRatings(params = {}) {
     try {

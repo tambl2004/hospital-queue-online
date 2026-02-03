@@ -15,7 +15,8 @@ function PatientBookPage() {
   const [success, setSuccess] = useState(false);
   
   // Filter state
-  const [filterData, setFilterData] = useState(null);
+  const [filterData, setFilterData] = useState(null); // { department_id, appointment_date }
+  const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   
@@ -24,45 +25,73 @@ function PatientBookPage() {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [bookingInfo, setBookingInfo] = useState(null);
 
+  // Bước 1: Chọn chuyên khoa + ngày -> load danh sách bác sĩ
   const handleSearch = async (filter) => {
     setError('');
     setLoading(true);
     setSlots([]);
+    setDoctors([]);
     setFilterData(filter);
 
     try {
-      // Lấy thông tin bác sĩ và chuyên khoa
-      const [doctorResponse, departmentResponse] = await Promise.all([
-        patientService.getDoctorById(filter.doctor_id),
-        patientService.getDepartmentById(filter.department_id),
-      ]);
-
-      if (!doctorResponse.success || !departmentResponse.success) {
-        setError('Không thể tải thông tin bác sĩ hoặc chuyên khoa');
+      // Lấy thông tin chuyên khoa
+      const departmentResponse = await patientService.getDepartmentById(filter.department_id);
+      if (!departmentResponse.success) {
+        setError('Không thể tải thông tin chuyên khoa');
         setLoading(false);
         return;
       }
 
-      setSelectedDoctor(doctorResponse.data);
       setSelectedDepartment(departmentResponse.data);
 
-      // Lấy danh sách slot
-      const scheduleResponse = await patientService.getDoctorSchedules(
-        filter.doctor_id,
-        filter.appointment_date
-      );
+      // Lấy danh sách bác sĩ trong khoa đó
+      const doctorsResponse = await patientService.getDoctors({
+        department_id: filter.department_id,
+        status: 'active',
+        limit: 100,
+      });
 
+      if (doctorsResponse.success) {
+        const list = doctorsResponse.data || [];
+        setDoctors(list);
+        if (list.length === 0) {
+          setError('Chuyên khoa này hiện chưa có bác sĩ hoạt động');
+        }
+      } else {
+        setError('Không thể tải danh sách bác sĩ');
+      }
+    } catch (error) {
+      console.error('Error searching slots:', error);
+      setError(
+        error.response?.data?.message || 'Có lỗi xảy ra khi tìm lịch trống. Vui lòng thử lại.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Bước 2: Chọn bác sĩ -> load danh sách slot
+  const handleSelectDoctor = async (doctor) => {
+    if (!filterData) return;
+    setError('');
+    setSelectedDoctor(doctor);
+    setSlots([]);
+    try {
+      setLoading(true);
+      const scheduleResponse = await patientService.getDoctorSchedules(
+        doctor.id,
+        filterData.appointment_date
+      );
       if (scheduleResponse.success) {
-        // Backend trả về schedules với booked_count hoặc current_patients
         const schedules = scheduleResponse.data || [];
         setSlots(schedules);
       } else {
         setError('Không thể tải danh sách lịch trống');
       }
     } catch (error) {
-      console.error('Error searching slots:', error);
+      console.error('Error fetching schedules:', error);
       setError(
-        error.response?.data?.message || 'Có lỗi xảy ra khi tìm lịch trống. Vui lòng thử lại.'
+        error.response?.data?.message || 'Có lỗi xảy ra khi tải lịch trống. Vui lòng thử lại.'
       );
     } finally {
       setLoading(false);
@@ -98,7 +127,7 @@ function PatientBookPage() {
   };
 
   const handleConfirmBooking = async () => {
-    if (!selectedSlot || !filterData) return;
+    if (!selectedSlot || !filterData || !selectedDoctor) return;
 
     setSubmitting(true);
     setError('');
@@ -108,7 +137,7 @@ function PatientBookPage() {
       // Backend có thể tự suy ra từ schedule, nhưng gửi thêm để đảm bảo
       const response = await patientService.bookAppointment({
         schedule_id: selectedSlot.id,
-        doctor_id: filterData.doctor_id,
+        doctor_id: selectedDoctor.id,
         appointment_date: filterData.appointment_date,
         appointment_time: selectedSlot.start_time,
       });
@@ -186,18 +215,81 @@ function PatientBookPage() {
         </div>
       )}
 
-      {/* Khu A: Form chọn nhanh */}
+      {/* Khu A: Form chọn chuyên khoa + ngày */}
       <BookingFilterForm onSearch={handleSearch} loading={loading} />
 
-      {/* Khu B: Danh sách slot */}
-      {(slots.length > 0 || loading) && (
-        <SlotResultPanel
-          slots={slots}
-          loading={loading}
-          onBookSlot={handleBookSlot}
-          doctor={selectedDoctor}
-          date={filterData?.appointment_date}
-        />
+      {/* Khu B: Danh sách bác sĩ trong khoa */}
+      {filterData && selectedDepartment && (
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            Chọn bác sĩ trong khoa {selectedDepartment.name}
+          </h2>
+          {doctors.length === 0 && !loading ? (
+            <div className="bg-white rounded-lg shadow-md p-6 text-gray-600">
+              Hiện chưa có bác sĩ nào trong chuyên khoa này.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {doctors.map((doctor) => (
+                <button
+                  key={doctor.id}
+                  type="button"
+                  onClick={() => handleSelectDoctor(doctor)}
+                  className={`text-left bg-white rounded-lg shadow-md p-4 border transition-all ${
+                    selectedDoctor?.id === doctor.id
+                      ? 'border-blue-500 ring-2 ring-blue-200'
+                      : 'border-transparent hover:border-blue-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-blue-100 rounded-md overflow-hidden flex items-center justify-center flex-shrink-0">
+                      {doctor.avatar_url ? (
+                        <img
+                          src={doctor.avatar_url}
+                          alt={doctor.full_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <FaUserMd className="text-blue-600 text-2xl" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-800">{doctor.full_name}</div>
+                      {doctor.experience_years && (
+                        <div className="text-xs text-gray-500">
+                          Kinh nghiệm: {doctor.experience_years} năm
+                        </div>
+                      )}
+                      {doctor.rating_avg != null && (
+                        <div className="text-xs text-gray-500">
+                          Đánh giá: {Number(doctor.rating_avg).toFixed(1)} / 5.0
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-3 text-sm text-blue-700 font-medium">
+                    Xem khung giờ trống ngày{' '}
+                    {filterData?.appointment_date &&
+                      new Date(filterData.appointment_date).toLocaleDateString('vi-VN')}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Khu C: Danh sách slot của bác sĩ đã chọn */}
+      {selectedDoctor && (slots.length > 0 || loading) && (
+        <div className="mt-6">
+          <SlotResultPanel
+            slots={slots}
+            loading={loading}
+            onBookSlot={handleBookSlot}
+            doctor={selectedDoctor}
+            date={filterData?.appointment_date}
+          />
+        </div>
       )}
 
       {/* Khu C: Modal xác nhận */}

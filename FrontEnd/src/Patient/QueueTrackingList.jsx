@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { patientService } from '../services/patientService';
-import { FaClipboardList, FaClock, FaArrowRight } from 'react-icons/fa';
+import { FaClipboardList, FaClock, FaArrowRight, FaUserMd } from 'react-icons/fa';
 
 /**
  * QueueTrackingList - Trang danh sách các lịch có thể theo dõi số thứ tự
@@ -14,6 +14,34 @@ function QueueTrackingList() {
     fetchTrackableAppointments();
   }, []);
 
+  // Helper: Enrich appointment với avatar bác sĩ
+  const enrichAppointmentWithAvatar = async (appt) => {
+    if (!appt || appt.doctor?.avatar_url) {
+      return appt;
+    }
+    
+    try {
+      const doctorId = appt.doctor?.id || appt.doctor_id;
+      if (doctorId) {
+        const doctorRes = await patientService.getDoctorById(doctorId);
+        if (doctorRes.success && doctorRes.data?.avatar_url) {
+          return {
+            ...appt,
+            doctor: {
+              ...(appt.doctor || {}),
+              id: doctorId,
+              avatar_url: doctorRes.data.avatar_url,
+            },
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('[QueueTrackingList] Không lấy được avatar bác sĩ:', err);
+    }
+    
+    return appt;
+  };
+
   const fetchTrackableAppointments = async () => {
     try {
       setLoading(true);
@@ -25,10 +53,15 @@ function QueueTrackingList() {
 
       if (response.success) {
         // Lọc các appointments có thể theo dõi (có queue_number và status phù hợp)
-        const trackable = (response.data || []).filter(
+        let trackable = (response.data || []).filter(
           (apt) =>
             apt.queue_number &&
             ['WAITING', 'CALLED', 'IN_PROGRESS'].includes(apt.status)
+        );
+
+        // Enrich với avatar bác sĩ cho mỗi appointment
+        trackable = await Promise.all(
+          trackable.map(apt => enrichAppointmentWithAvatar(apt))
         );
 
         // Sắp xếp: lịch sắp tới trước
@@ -119,13 +152,29 @@ function QueueTrackingList() {
         {appointments.map((appointment) => (
           <div
             key={appointment.id}
-            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+            className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-4 mb-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <FaClock className="text-blue-600 text-xl" />
+                  <div className="w-11 h-11 rounded-full overflow-hidden bg-blue-600 flex items-center justify-center">
+                    {appointment.doctor?.avatar_url ||
+                    appointment.doctor?.profile_image ||
+                    appointment.doctor?.image_url ||
+                    appointment.doctor?.avatar ? (
+                      <img
+                        src={
+                          appointment.doctor?.avatar_url ||
+                          appointment.doctor?.profile_image ||
+                          appointment.doctor?.image_url ||
+                          appointment.doctor?.avatar
+                        }
+                        alt={appointment.doctor?.full_name || 'Bác sĩ'}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <FaUserMd className="text-white text-xl" />
+                    )}
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-800">

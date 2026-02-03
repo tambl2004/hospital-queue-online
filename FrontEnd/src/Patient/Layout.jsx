@@ -35,7 +35,7 @@ const Layout = ({ children }) => {
 
   const handleLogout = () => {
     authService.logout();
-    navigate('/auth/login');
+    navigate('/');
   };
 
   return (

@@ -5,7 +5,6 @@ import { connectQueueSocket, joinQueueRoom, leaveQueueRoom, disconnectQueueSocke
 import QueueContextHeader from '../components/Patient/QueueContextHeader';
 import MyQueueNumberCard from '../components/Patient/MyQueueNumberCard';
 import CurrentQueueCard from '../components/Patient/CurrentQueueCard';
-import QueueEstimateCard from '../components/Patient/QueueEstimateCard';
 import QueueNearbyList from '../components/Patient/QueueNearbyList';
 import { FaHome, FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
 
@@ -21,6 +20,7 @@ function QueueTracker() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [socketConnected, setSocketConnected] = useState(false);
+  const [roomInfo, setRoomInfo] = useState(null); // doctorId + date để fallback polling
   
   const socketDisconnectRef = useRef(null);
   const currentRoomRef = useRef(null);
@@ -47,7 +47,12 @@ function QueueTracker() {
     }
     
     if (socketDisconnectRef.current) {
-      socketDisconnectRef.current();
+      // socketDisconnectRef.current giờ là object { disconnect, onReconnect, isConnected }
+      if (typeof socketDisconnectRef.current === 'function') {
+        socketDisconnectRef.current();
+      } else if (socketDisconnectRef.current?.disconnect) {
+        socketDisconnectRef.current.disconnect();
+      }
       socketDisconnectRef.current = null;
     }
     
@@ -68,7 +73,11 @@ function QueueTracker() {
         return;
       }
 
-      const appt = appointmentResponse.data;
+      let appt = appointmentResponse.data;
+
+      // Enrich appointment với avatar bác sĩ
+      appt = await enrichAppointmentWithAvatar(appt);
+
       setAppointment(appt);
 
       // Kiểm tra appointment có bị hủy không
@@ -87,8 +96,9 @@ function QueueTracker() {
 
       // 2. Kết nối Socket.IO và join room
       const doctorId = appt.doctor_id || appt.doctor?.id;
-      // Format date thành YYYY-MM-DD (backend yêu cầu format này)
-      let date = appt.appointment_date;
+      // Sử dụng queue_date nếu có (trùng hoàn toàn với queue_numbers.queue_date trên backend),
+      // fallback sang appointment_date nếu chưa có
+      let date = appt.queue_date || appt.appointment_date;
       if (date) {
         // Nếu date là ISO datetime string, extract chỉ phần date
         if (date.includes('T')) {
@@ -102,6 +112,12 @@ function QueueTracker() {
           date = dateObj.toISOString().split('T')[0];
         }
       }
+      
+      // Debug: log date để kiểm tra
+      console.log('[QueueTracker] Initializing with date:', date);
+      console.log('[QueueTracker] Appointment queue_date:', appt.queue_date);
+      console.log('[QueueTracker] Appointment appointment_date:', appt.appointment_date);
+      console.log('[QueueTracker] Doctor ID:', doctorId);
 
       if (!doctorId || !date) {
         setError('Thông tin lịch khám không đầy đủ');
@@ -110,7 +126,7 @@ function QueueTracker() {
       }
 
       // Kết nối socket
-      const disconnect = connectQueueSocket(
+      const socketControl = connectQueueSocket(
         (data) => {
           handleQueueUpdate(data);
           setSocketConnected(true);
@@ -118,14 +134,32 @@ function QueueTracker() {
         handleSocketError
       );
 
-      socketDisconnectRef.current = disconnect;
+      socketDisconnectRef.current = socketControl.disconnect;
       currentRoomRef.current = { doctorId, date, appointmentId };
+      setRoomInfo({ doctorId, date });
+
+      // Đăng ký callback khi socket reconnect để tự động join lại room
+      socketControl.onReconnect(() => {
+        console.log('[QueueTracker] Socket reconnected, rejoining room...');
+        const { doctorId: roomDoctorId, date: roomDate, appointmentId: roomAppointmentId } = currentRoomRef.current || {};
+        if (roomDoctorId && roomDate) {
+          setTimeout(() => {
+            joinQueueRoom(roomDoctorId, roomDate, roomAppointmentId);
+            fetchQueueState(roomDoctorId, roomDate);
+          }, 500);
+        }
+      });
 
       // Join room sau khi socket connected (thử nhiều lần nếu cần)
       const tryJoinRoom = () => {
         try {
-          joinQueueRoom(doctorId, date, appointmentId);
-          setSocketConnected(true);
+          if (socketControl.isConnected()) {
+            joinQueueRoom(doctorId, date, appointmentId);
+            setSocketConnected(true);
+          } else {
+            // Socket chưa connected, retry sau
+            setTimeout(tryJoinRoom, 1000);
+          }
         } catch (err) {
           console.warn('[QueueTracker] Failed to join room, retrying...', err);
           setTimeout(tryJoinRoom, 1000);
@@ -146,6 +180,37 @@ function QueueTracker() {
     }
   };
 
+  // Helper function: Enrich appointment với avatar bác sĩ
+  const enrichAppointmentWithAvatar = async (appt) => {
+    if (!appt) return appt;
+    
+    // Nếu đã có avatar_url rồi thì không cần fetch lại
+    if (appt.doctor?.avatar_url) {
+      return appt;
+    }
+    
+    try {
+      const doctorIdForAvatar = appt.doctor?.id || appt.doctor_id;
+      if (doctorIdForAvatar) {
+        const doctorDetailRes = await patientService.getDoctorById(doctorIdForAvatar);
+        if (doctorDetailRes.success && doctorDetailRes.data?.avatar_url) {
+          return {
+            ...appt,
+            doctor: {
+              ...(appt.doctor || {}),
+              id: doctorIdForAvatar,
+              avatar_url: doctorDetailRes.data.avatar_url,
+            },
+          };
+        }
+      }
+    } catch (avatarErr) {
+      console.warn('[QueueTracker] Không lấy được avatar bác sĩ:', avatarErr);
+    }
+    
+    return appt;
+  };
+
   const fetchQueueState = async (doctorId, date) => {
     try {
       const { queueService } = await import('../services/queueService');
@@ -161,15 +226,54 @@ function QueueTracker() {
     }
   };
 
+  // Reconnect callback đã được đăng ký trong initializeTracking
+  // Không cần polling nữa vì socket tự động reconnect và callback sẽ handle
+
   const handleQueueUpdate = (data) => {
     console.log('[QueueTracker] Received queue update:', data);
-    console.log('[QueueTracker] Current appointment:', appointment);
     console.log('[QueueTracker] Current appointmentId:', appointmentId);
     
-    if (data && data.context) {
-      processQueueState(data);
-    } else {
+    if (!data || !data.context) {
       console.warn('[QueueTracker] Received invalid queue update data:', data);
+      return;
+    }
+
+    // Debug: log context để kiểm tra date/doctorId
+    console.log('[QueueTracker] Queue context:', data.context);
+    console.log('[QueueTracker] Expected room info:', currentRoomRef.current);
+    
+    if (currentRoomRef.current && data.context) {
+      const expectedDate = currentRoomRef.current.date;
+      const receivedDate = data.context.date;
+      if (expectedDate !== receivedDate) {
+        console.warn(`[QueueTracker] Date mismatch! Expected: ${expectedDate}, Received: ${receivedDate}`);
+      }
+    }
+
+    // Luôn reload appointment từ API để lấy trạng thái mới nhất (CALLED / IN_PROGRESS / DONE...)
+    if (appointmentId) {
+      patientService
+        .getAppointmentById(appointmentId)
+        .then(async (response) => {
+          if (response.success && response.data) {
+            console.log('[QueueTracker] Reloaded appointment from API:', response.data);
+            // Enrich với avatar bác sĩ trước khi set
+            const enrichedAppt = await enrichAppointmentWithAvatar(response.data);
+            setAppointment(enrichedAppt);
+          } else {
+            console.warn('[QueueTracker] Failed to reload appointment from API, keeping old state');
+          }
+        })
+        .catch((err) => {
+          console.error('[QueueTracker] Failed to reload appointment:', err);
+        })
+        .finally(() => {
+          // Dù API thành công hay thất bại, vẫn process queue state để cập nhật currentQueue / danh sách
+          processQueueState(data);
+        });
+    } else {
+      // Không có appointmentId (trường hợp hiếm), chỉ process queue state
+      processQueueState(data);
     }
   };
 
@@ -184,8 +288,19 @@ function QueueTracker() {
     setQueueState(queueData);
     setSocketConnected(true);
 
-    // Cập nhật status của appointment nếu có trong queue
-    if (queueData.appointments || queueData.waitingList || queueData.calledList) {
+    // Cập nhật status của appointment từ queueData
+    // Có thể lấy từ current, inProgress, hoặc từ danh sách appointments
+    let myAppointment = null;
+
+    // Ưu tiên: kiểm tra current/inProgress trước
+    if (queueData.current && queueData.current.appointmentId === parseInt(appointmentId)) {
+      myAppointment = queueData.current;
+      console.log('[QueueTracker] Found my appointment in current:', myAppointment);
+    } else if (queueData.inProgress && queueData.inProgress.appointmentId === parseInt(appointmentId)) {
+      myAppointment = queueData.inProgress;
+      console.log('[QueueTracker] Found my appointment in inProgress:', myAppointment);
+    } else if (queueData.appointments || queueData.waitingList || queueData.calledList) {
+      // Tìm trong danh sách appointments
       const allAppointments = [
         ...(queueData.waitingList || []),
         ...(queueData.calledList || []),
@@ -195,79 +310,84 @@ function QueueTracker() {
       console.log('[QueueTracker] All appointments in queue:', allAppointments);
       console.log('[QueueTracker] Looking for appointmentId:', appointmentId);
 
-      const myAppointment = allAppointments.find(
+      myAppointment = allAppointments.find(
         (apt) => apt.appointmentId === parseInt(appointmentId)
       );
 
-      console.log('[QueueTracker] Found my appointment:', myAppointment);
-      console.log('[QueueTracker] Current appointment status:', appointment?.status);
-
-      if (myAppointment) {
-        const newStatus = myAppointment.status;
-        console.log('[QueueTracker] Updating appointment status from', appointment?.status, 'to', newStatus);
-        
-        setAppointment((prev) => {
-          if (!prev) {
-            console.warn('[QueueTracker] No previous appointment state to update');
-            return prev;
-          }
-          
-          if (prev.status !== newStatus) {
-            console.log('[QueueTracker] Status changed! Updating...');
-            return {
-              ...prev,
-              status: newStatus,
-            };
-          } else {
-            console.log('[QueueTracker] Status unchanged, skipping update');
-            return prev;
-          }
-        });
-      } else {
-        console.warn('[QueueTracker] My appointment not found in queue data');
-      }
+      console.log('[QueueTracker] Found my appointment in list:', myAppointment);
     }
-  };
 
-  // Tính toán số lượt trước bệnh nhân
-  const calculateAheadCount = () => {
-    if (!queueState || !appointment) return 0;
-
-    const myQueueNumber = appointment.queue_number;
-    if (!myQueueNumber) return 0;
-
-    // Lấy tất cả appointments đang chờ (WAITING, CALLED, IN_PROGRESS)
-    const allWaiting = [
-      ...(queueState.waitingList || []),
-      ...(queueState.calledList || []),
-      ...(queueState.appointments || []),
-    ].filter(
-      (apt) =>
-        apt.queueNumber < myQueueNumber &&
-        ['WAITING', 'CALLED', 'IN_PROGRESS'].includes(apt.status)
-    );
-
-    return allWaiting.length;
+    // Nếu tìm thấy appointment trong queue, cập nhật status
+    if (myAppointment) {
+      const newStatus = myAppointment.status;
+      console.log('[QueueTracker] Updating appointment status to', newStatus);
+      
+      // Dùng functional update để không phụ thuộc vào appointment state hiện tại
+      setAppointment((prev) => {
+        if (!prev) {
+          console.warn('[QueueTracker] Appointment state is null, cannot update status');
+          // Nếu appointment null, thử reload từ API
+          if (appointmentId) {
+            console.log('[QueueTracker] Attempting to reload appointment from API...');
+            patientService.getAppointmentById(appointmentId).then((response) => {
+              if (response.success && response.data) {
+                setAppointment({
+                  ...response.data,
+                  status: newStatus, // Update với status mới từ queue
+                });
+              }
+            }).catch((err) => {
+              console.error('[QueueTracker] Failed to reload appointment:', err);
+            });
+          }
+          return prev;
+        }
+        
+        if (prev.status !== newStatus) {
+          console.log('[QueueTracker] Status changed from', prev.status, 'to', newStatus);
+          return {
+            ...prev,
+            status: newStatus,
+          };
+        } else {
+          console.log('[QueueTracker] Status unchanged, skipping update');
+          return prev;
+        }
+      });
+    } else {
+      console.warn('[QueueTracker] My appointment not found in queue data');
+      // Nếu queueData có current/inProgress nhưng không phải appointment của mình,
+      // vẫn cập nhật queueState để hiển thị số đang gọi/khám
+    }
   };
 
   // Lấy danh sách queue để hiển thị nearby
   const getQueueList = () => {
-    if (!queueState) return [];
+    if (queueState) {
+      const allAppointments = [
+        ...(queueState.waitingList || []),
+        ...(queueState.calledList || []),
+        ...(queueState.appointments || []),
+      ];
 
-    const allAppointments = [
-      ...(queueState.waitingList || []),
-      ...(queueState.calledList || []),
-      ...(queueState.appointments || []),
-    ];
+      if (allAppointments.length > 0) {
+        // Sắp xếp theo queue_number
+        return allAppointments.sort((a, b) => a.queueNumber - b.queueNumber);
+      }
+    }
 
-    // Sắp xếp theo queue_number
-    return allAppointments.sort((a, b) => a.queueNumber - b.queueNumber);
-  };
+    // Fallback: nếu queueState trống nhưng appointment có queue_number
+    if (appointment?.queue_number) {
+      return [
+        {
+          appointmentId: appointment.id,
+          queueNumber: appointment.queue_number,
+          status: appointment.status,
+        },
+      ];
+    }
 
-  // Tính ước lượng thời gian (giả sử mỗi lượt khám ~15 phút)
-  const calculateEstimatedMinutes = () => {
-    const aheadCount = calculateAheadCount();
-    return aheadCount * 15; // 15 phút mỗi lượt
+    return [];
   };
 
   if (loading) {
@@ -300,13 +420,19 @@ function QueueTracker() {
     );
   }
 
-  const aheadCount = calculateAheadCount();
-  const estimatedMinutes = calculateEstimatedMinutes();
   const queueList = getQueueList();
   
   // Lấy currentQueue - ưu tiên inProgress, sau đó current
   // Nếu appointment của bệnh nhân đang IN_PROGRESS, hiển thị số của họ
   let currentQueue = queueState?.inProgress || queueState?.current;
+
+  // Fallback nếu backend trả queue_number thay vì queueNumber
+  if (currentQueue && !currentQueue.queueNumber && currentQueue.queue_number) {
+    currentQueue = {
+      ...currentQueue,
+      queueNumber: currentQueue.queue_number,
+    };
+  }
   
   // Nếu appointment của bệnh nhân đang IN_PROGRESS và là current, hiển thị số của họ
   if (appointment?.status === 'IN_PROGRESS' && appointment?.queue_number) {
@@ -317,6 +443,26 @@ function QueueTracker() {
       currentQueue = myAppointmentInQueue;
     }
   }
+
+  // Fallback cuối: nếu không tìm thấy trong queueState nhưng status đang CALLED/IN_PROGRESS,
+  // thì vẫn hiển thị số của chính bệnh nhân là current
+  if (
+    !currentQueue &&
+    appointment?.queue_number &&
+    ['CALLED', 'IN_PROGRESS'].includes(appointment.status)
+  ) {
+    currentQueue = {
+      appointmentId: appointment.id,
+      queueNumber: appointment.queue_number,
+      status: appointment.status,
+      patientName: appointment.patient?.full_name || appointment.patient_name || undefined,
+    };
+  }
+
+  // Debug log để kiểm tra
+  console.log('[QueueTracker] Final currentQueue:', currentQueue);
+  console.log('[QueueTracker] Final appointment status:', appointment?.status);
+  console.log('[QueueTracker] Final queueState:', queueState);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -340,7 +486,7 @@ function QueueTracker() {
         )}
       </div>
 
-      {/* Khu B & C: Số của tôi và Số hiện tại */}
+      {/* Khu B & C: Số của tôi và Số đang gọi/đang khám */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <MyQueueNumberCard
           queueNumber={appointment.queue_number}
@@ -349,16 +495,8 @@ function QueueTracker() {
         <CurrentQueueCard currentQueue={currentQueue} />
       </div>
 
-      {/* Khu D: Ước lượng */}
-      <div className="mb-6">
-        <QueueEstimateCard
-          aheadCount={aheadCount}
-          estimatedMinutes={estimatedMinutes}
-        />
-      </div>
-
-      {/* Khu E: Danh sách số gần nhất */}
-      <div className="mb-6">
+      {/* Khu D: Danh sách số gần nhất */}
+      <div className="mb-5">
         <QueueNearbyList
           queueList={queueList}
           myQueueNumber={appointment.queue_number}

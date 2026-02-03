@@ -31,7 +31,7 @@ api.interceptors.response.use(
       // Token hết hạn hoặc không hợp lệ
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/auth/login';
+      window.location.href = '/';
     }
     return Promise.reject(error);
   }

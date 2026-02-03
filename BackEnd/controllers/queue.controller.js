@@ -697,6 +697,10 @@ exports.recallAppointment = async (req, res, next) => {
  * Helper function: Lấy queue state (dùng chung cho controller và socket)
  */
 async function getQueueStateInternal(pool, doctor_id, date) {
+  // Normalize date để đảm bảo format nhất quán
+  const normalizedDate = normalizeDate(date);
+  console.log(`[getQueueStateInternal] Querying queue for doctor_id=${doctor_id}, date=${date}, normalized=${normalizedDate}`);
+  
   const query = `
     SELECT 
       a.id as appointment_id,
@@ -715,7 +719,8 @@ async function getQueueStateInternal(pool, doctor_id, date) {
     ORDER BY qn.queue_number ASC
   `;
 
-  const [appointmentRows] = await pool.execute(query, [doctor_id, date]);
+  const [appointmentRows] = await pool.execute(query, [doctor_id, normalizedDate]);
+  console.log(`[getQueueStateInternal] Found ${appointmentRows.length} appointments for doctor_id=${doctor_id}, date=${normalizedDate}`);
 
   const waitingList = [];
   const calledList = [];

@@ -325,7 +325,27 @@ const AdminDoctorList = () => {
                           {(pagination.page - 1) * pagination.limit + index + 1}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {doctor.full_name}
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-50 rounded-md overflow-hidden flex items-center justify-center flex-shrink-0">
+                              {doctor.avatar_url ? (
+                                <img
+                                  src={doctor.avatar_url}
+                                  alt={doctor.full_name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-xs font-semibold text-blue-700">
+                                  {doctor.full_name?.charAt(0) || 'B'}
+                                </span>
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900">{doctor.full_name}</div>
+                              {doctor.department?.name && (
+                                <div className="text-xs text-gray-500">{doctor.department.name}</div>
+                              )}
+                            </div>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {doctor.email}

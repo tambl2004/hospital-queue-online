@@ -15,6 +15,7 @@ import {
   FaClipboardList,
   FaBullhorn,
   FaChartLine,
+  FaQuestionCircle,
 } from 'react-icons/fa';
 
 const Layout = ({ children }) => {
@@ -33,11 +34,12 @@ const Layout = ({ children }) => {
     { path: '/admin/appointments', label: 'Quản lý lượt đăng ký', icon: FaClipboardList },
     { path: '/admin/queue', label: 'Queue & gọi số', icon: FaBullhorn },
     { path: '/admin/statistics', label: 'Thống kê', icon: FaChartLine },
+    { path: '/admin/faqs', label: 'Quản lý FAQ', icon: FaQuestionCircle },
   ];
 
   const handleLogout = () => {
     authService.logout();
-    navigate('/auth/login');
+    navigate('/');
   };
 
   return (

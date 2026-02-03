@@ -1,28 +1,19 @@
 import { useState, useEffect } from 'react';
 import { patientService } from '../../services/patientService';
 import { FaHospital, FaUserMd, FaCalendarAlt, FaSearch } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 function BookingFilterForm({ onSearch, loading }) {
   const [departments, setDepartments] = useState([]);
-  const [doctors, setDoctors] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState('');
-  const [selectedDoctor, setSelectedDoctor] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(
+    () => new Date().toISOString().split('T')[0]
+  );
   const [loadingDepartments, setLoadingDepartments] = useState(false);
-  const [loadingDoctors, setLoadingDoctors] = useState(false);
 
   useEffect(() => {
     fetchDepartments();
   }, []);
-
-  useEffect(() => {
-    if (selectedDepartment) {
-      fetchDoctors();
-    } else {
-      setDoctors([]);
-      setSelectedDoctor('');
-    }
-  }, [selectedDepartment]);
 
   const fetchDepartments = async () => {
     try {
@@ -41,33 +32,13 @@ function BookingFilterForm({ onSearch, loading }) {
     }
   };
 
-  const fetchDoctors = async () => {
-    if (!selectedDepartment) return;
-    try {
-      setLoadingDoctors(true);
-      const response = await patientService.getDoctors({
-        department_id: selectedDepartment,
-        status: 'active',
-        limit: 100,
-      });
-      if (response.success) {
-        setDoctors(response.data || []);
-      }
-    } catch (error) {
-      console.error('Error fetching doctors:', error);
-    } finally {
-      setLoadingDoctors(false);
-    }
-  };
-
   const handleSearch = () => {
-    if (!selectedDoctor || !selectedDate) {
-      alert('Vui lòng chọn đầy đủ: Chuyên khoa, Bác sĩ và Ngày khám');
+    if (!selectedDepartment || !selectedDate) {
+      toast.error('Vui lòng chọn đầy đủ: Chuyên khoa và Ngày khám');
       return;
     }
     onSearch({
       department_id: selectedDepartment,
-      doctor_id: selectedDoctor,
       appointment_date: selectedDate,
     });
   };
@@ -89,7 +60,7 @@ function BookingFilterForm({ onSearch, loading }) {
         Tìm Lịch Trống
       </h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Dropdown 1: Chuyên khoa */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
@@ -100,7 +71,6 @@ function BookingFilterForm({ onSearch, loading }) {
             value={selectedDepartment}
             onChange={(e) => {
               setSelectedDepartment(e.target.value);
-              setSelectedDoctor('');
             }}
             disabled={loadingDepartments}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
@@ -109,27 +79,6 @@ function BookingFilterForm({ onSearch, loading }) {
             {departments.map((dept) => (
               <option key={dept.id} value={dept.id}>
                 {dept.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Dropdown 2: Bác sĩ */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-            <FaUserMd className="text-blue-600" />
-            Bác sĩ <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={selectedDoctor}
-            onChange={(e) => setSelectedDoctor(e.target.value)}
-            disabled={!selectedDepartment || loadingDoctors}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
-          >
-            <option value="">-- Chọn bác sĩ --</option>
-            {doctors.map((doctor) => (
-              <option key={doctor.id} value={doctor.id}>
-                {doctor.full_name}
               </option>
             ))}
           </select>
@@ -155,7 +104,7 @@ function BookingFilterForm({ onSearch, loading }) {
         <div className="flex items-end">
           <button
             onClick={handleSearch}
-            disabled={!selectedDoctor || !selectedDate || loading}
+            disabled={!selectedDepartment || !selectedDate || loading}
             className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold flex items-center justify-center gap-2"
           >
             {loading ? (

@@ -48,20 +48,20 @@ function QueueNearbyList({ queueList, myQueueNumber, myAppointmentId }) {
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 border-2 border-gray-300 shadow-lg">
-      <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+    <div className="bg-white rounded-lg p-5 border border-gray-200 shadow-md">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
         <FaHashtag className="text-blue-600 text-2xl" />
         Các số gần nhất
       </h3>
       
-      <div className="space-y-3">
+      <div className="space-y-2">
         {nearbyList.map((item, index) => {
           const isMine = item.appointmentId === myAppointmentId || item.queueNumber === myQueueNumber;
           
           return (
             <div
               key={item.appointmentId || index}
-              className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-200 ${
+              className={`flex items-center justify-between p-3 rounded-md border transition-all duration-200 ${
                 isMine
                   ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-blue-400 shadow-md'
                   : 'bg-gray-50 border-gray-300 hover:bg-gray-100'

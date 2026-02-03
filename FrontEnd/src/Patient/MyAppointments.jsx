@@ -2,10 +2,6 @@ import PatientAppointmentsPage from './PatientAppointmentsPage';
 
 function MyAppointments() {
   return <PatientAppointmentsPage />;
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, waiting, in_progress, done, cancelled
-  const [cancellingId, setCancellingId] = useState(null);
 
   useEffect(() => {
     fetchAppointments();

@@ -203,6 +203,14 @@ const login = async (req, res, next) => {
       });
     }
 
+    // Kiểm tra nếu user đăng nhập bằng Google (không có password_hash)
+    if (!user.password_hash) {
+      return res.status(400).json({
+        success: false,
+        message: 'Tài khoản này đăng nhập bằng Google. Vui lòng sử dụng "Đăng nhập bằng Google".',
+      });
+    }
+
     // So sánh password
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
@@ -476,10 +484,79 @@ const forgotPassword = async (req, res, next) => {
   }
 };
 
+/**
+ * Đổi mật khẩu cho user đang đăng nhập
+ * PUT /api/auth/change-password
+ */
+const changePassword = async (req, res, next) => {
+  try {
+    const pool = getPool();
+    const userId = req.user.id;
+    const { current_password, new_password } = req.body;
+
+    if (!current_password || !new_password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới',
+      });
+    }
+
+    // Validate mật khẩu mới
+    const pwValidation = validatePassword(new_password);
+    if (!pwValidation.valid) {
+      return res.status(400).json({
+        success: false,
+        message: pwValidation.message,
+      });
+    }
+
+    // Lấy user hiện tại
+    const [users] = await pool.execute(
+      'SELECT id, password_hash FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Người dùng không tồn tại',
+      });
+    }
+
+    const user = users[0];
+
+    // Kiểm tra mật khẩu hiện tại
+    const isValid = await bcrypt.compare(current_password, user.password_hash);
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mật khẩu hiện tại không đúng',
+      });
+    }
+
+    // Hash mật khẩu mới
+    const salt = await bcrypt.genSalt(10);
+    const newHash = await bcrypt.hash(new_password, salt);
+
+    await pool.execute(
+      'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [newHash, userId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Đổi mật khẩu thành công',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   getMe,
   updateProfile,
   forgotPassword,
+  changePassword,
 };

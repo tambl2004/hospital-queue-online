@@ -40,17 +40,32 @@ function QueueContextHeader({ appointment }) {
     return timeStr.substring(0, 5);
   };
 
+  // Ưu tiên lấy ảnh bác sĩ nếu có, fallback icon
+  const doctorAvatar =
+    appointment.doctor?.avatar_url ||
+    appointment.doctor?.profile_image ||
+    appointment.doctor?.image_url ||
+    appointment.doctor?.avatar;
+
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-5 border border-blue-200">
       <div className="flex items-start gap-4">
-        {/* Avatar/Icon */}
-        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-          <FaUserMd className="text-white text-2xl" />
+        {/* Avatar bác sĩ */}
+        <div className="w-14 h-14 rounded-full overflow-hidden bg-blue-600 flex items-center justify-center flex-shrink-0">
+          {doctorAvatar ? (
+            <img
+              src={doctorAvatar}
+              alt={appointment.doctor?.full_name || 'Bác sĩ'}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <FaUserMd className="text-white text-2xl" />
+          )}
         </div>
 
         {/* Info */}
         <div className="flex-1">
-          <div className="flex items-start justify-between mb-3">
+          <div className="flex items-start justify-between mb-2">
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-1">
                 {appointment.doctor?.full_name || 'Bác sĩ'}
@@ -63,7 +78,7 @@ function QueueContextHeader({ appointment }) {
             {getStatusBadge(appointment.status)}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
             {appointment.room && (
               <div className="flex items-center gap-2 text-gray-600">
                 <FaDoorOpen className="text-blue-600" />

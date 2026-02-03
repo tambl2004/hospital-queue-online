@@ -1,4 +1,7 @@
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const router = express.Router();
 const doctorController = require('../controllers/doctor.controller');
 const { authenticate, requireRole } = require('../middlewares/auth');
@@ -60,6 +63,46 @@ router.get(
   authenticate,
   requireRole(['DOCTOR', 'ADMIN']),
   doctorController.getRatings
+);
+
+// Upload config for doctor avatar
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, '..', 'uploads', 'doctors');
+    fs.mkdirSync(uploadDir, { recursive: true });
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname) || '.jpg';
+    const filename = `doctor_${req.user.id}_${Date.now()}${ext}`;
+    cb(null, filename);
+  },
+});
+
+const avatarFileFilter = (req, file, cb) => {
+  if (!file.mimetype.startsWith('image/')) {
+    return cb(new Error('File không phải là ảnh'));
+  }
+  cb(null, true);
+};
+
+const uploadAvatar = multer({
+  storage: avatarStorage,
+  fileFilter: avatarFileFilter,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+});
+
+/**
+ * @route   POST /api/doctor/profile/avatar
+ * @desc    Cập nhật ảnh hồ sơ bác sĩ
+ * @access  Doctor
+ */
+router.post(
+  '/profile/avatar',
+  authenticate,
+  requireRole(['DOCTOR']),
+  uploadAvatar.single('avatar'),
+  doctorController.updateAvatar
 );
 
 module.exports = router;

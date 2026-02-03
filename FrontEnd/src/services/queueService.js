@@ -30,12 +30,17 @@ export const connectQueueSocket = (onStateUpdate, onError) => {
     socket.disconnect();
   }
 
-  // Tạo socket mới
+  // Tạo socket mới với auto-reconnect
   socket = io(SOCKET_URL, {
     auth: {
       token: token
     },
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    reconnectionAttempts: Infinity,
+    timeout: 20000,
   });
 
   socket.on('connect', () => {
@@ -58,8 +63,42 @@ export const connectQueueSocket = (onStateUpdate, onError) => {
     onError?.(error);
   });
 
-  socket.on('disconnect', () => {
-    console.log('[Queue Socket] Disconnected');
+  socket.on('disconnect', (reason) => {
+    console.log('[Queue Socket] Disconnected, reason:', reason);
+    // Tự động reconnect nếu không phải disconnect thủ công
+    if (reason === 'io server disconnect') {
+      // Server disconnect, cần reconnect thủ công
+      socket.connect();
+    }
+    // Các trường hợp khác (transport close, ping timeout) sẽ tự reconnect
+  });
+
+  // Store callbacks để có thể gọi lại khi reconnect
+  let reconnectCallbacks = [];
+
+  socket.on('reconnect', (attemptNumber) => {
+    console.log('[Queue Socket] Reconnected after', attemptNumber, 'attempts');
+    // Gọi lại các callback reconnect
+    reconnectCallbacks.forEach(cb => {
+      try {
+        cb();
+      } catch (err) {
+        console.error('[Queue Socket] Error in reconnect callback:', err);
+      }
+    });
+  });
+
+  socket.on('reconnect_attempt', (attemptNumber) => {
+    console.log('[Queue Socket] Reconnection attempt', attemptNumber);
+  });
+
+  socket.on('reconnect_error', (error) => {
+    console.error('[Queue Socket] Reconnection error:', error);
+  });
+
+  socket.on('reconnect_failed', () => {
+    console.error('[Queue Socket] Reconnection failed');
+    onError?.({ message: 'Không thể kết nối lại socket' });
   });
 
   socket.on('connect_error', (error) => {
@@ -67,12 +106,23 @@ export const connectQueueSocket = (onStateUpdate, onError) => {
     onError?.(error);
   });
 
-  // Return disconnect function
-  return () => {
-    if (socket) {
-      socket.disconnect();
-      socket = null;
-    }
+  // Return disconnect function và socket control để có thể đăng ký reconnect callback
+  return {
+    disconnect: () => {
+      reconnectCallbacks = [];
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+      }
+    },
+    onReconnect: (callback) => {
+      reconnectCallbacks.push(callback);
+      // Return unsubscribe function
+      return () => {
+        reconnectCallbacks = reconnectCallbacks.filter(cb => cb !== callback);
+      };
+    },
+    isConnected: () => socket?.connected || false,
   };
 };
 

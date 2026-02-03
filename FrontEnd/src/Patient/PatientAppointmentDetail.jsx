@@ -6,6 +6,7 @@ import RateDoctorButton from './RateDoctorButton';
 import DoctorRatingModal from './DoctorRatingModal';
 import MyRatingView from './MyRatingView';
 import { FaUserMd, FaCalendarAlt, FaClock, FaArrowLeft, FaEye, FaTimes, FaListOl, FaDoorOpen, FaHospital } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 function PatientAppointmentDetail() {
   const { id } = useParams();
@@ -57,10 +58,10 @@ function PatientAppointmentDetail() {
     try {
       setCancelling(true);
       await patientService.cancelAppointment(appointmentId, reason);
-      alert('Đã hủy lịch khám thành công');
+      toast.success('Đã hủy lịch khám thành công');
       navigate('/my-appointments');
     } catch (error) {
-      alert(error.response?.data?.message || 'Không thể hủy lịch khám');
+      toast.error(error.response?.data?.message || 'Không thể hủy lịch khám');
     } finally {
       setCancelling(false);
       setShowCancelModal(false);

@@ -340,6 +340,7 @@ exports.getAppointmentById = async (req, res, next) => {
       appointment_time: appointment.appointment_time,
       status: appointment.status,
       queue_number: appointment.queue_number,
+      queue_date: appointment.queue_date || null,
       doctor: {
         id: appointment.doctor_id,
         full_name: appointment.doctor_name,

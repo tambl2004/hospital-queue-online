@@ -41,6 +41,7 @@ const getDoctors = async (req, res, next) => {
         d.experience_years,
         d.rating_avg,
         d.bio,
+        d.avatar_url,
         d.is_active,
         d.created_at,
         d.updated_at
@@ -115,6 +116,7 @@ const getDoctors = async (req, res, next) => {
       experience_years: doctor.experience_years,
       rating_avg: doctor.rating_avg ? parseFloat(doctor.rating_avg) : 0,
       bio: doctor.bio,
+      avatar_url: doctor.avatar_url || null,
       is_active: doctor.is_active,
       created_at: doctor.created_at,
       updated_at: doctor.updated_at,
@@ -162,6 +164,7 @@ const getDoctorById = async (req, res, next) => {
         d.experience_years,
         d.rating_avg,
         d.bio,
+        d.avatar_url,
         d.is_active,
         d.created_at,
         d.updated_at
@@ -204,6 +207,7 @@ const getDoctorById = async (req, res, next) => {
       experience_years: doctor.experience_years,
       rating_avg: doctor.rating_avg ? parseFloat(doctor.rating_avg) : 0,
       bio: doctor.bio,
+      avatar_url: doctor.avatar_url || null,
       is_active: doctor.is_active,
       created_at: doctor.created_at,
       updated_at: doctor.updated_at,

@@ -130,8 +130,16 @@ function DoctorDetail() {
         {/* Doctor Info Card */}
         <div className="bg-white rounded-lg shadow-md p-8 mb-8">
           <div className="flex flex-col md:flex-row gap-6">
-            <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <FaUserMd className="text-blue-600 text-5xl" />
+            <div className="w-32 h-32 bg-blue-100 rounded-md overflow-hidden flex items-center justify-center flex-shrink-0">
+              {doctor.avatar_url ? (
+                <img
+                  src={doctor.avatar_url}
+                  alt={doctor.full_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <FaUserMd className="text-blue-600 text-5xl" />
+              )}
             </div>
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-800 mb-2">{doctor.full_name}</h1>

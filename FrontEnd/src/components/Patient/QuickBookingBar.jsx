@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { patientService } from '../../services/patientService';
 import { FaSearch, FaCalendarAlt, FaUserMd, FaHospital } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 function QuickBookingBar() {
   const navigate = useNavigate();
@@ -61,7 +62,7 @@ function QuickBookingBar() {
 
   const handleViewSchedule = () => {
     if (!selectedDoctor || !selectedDate) {
-      alert('Vui lòng chọn đầy đủ: Chuyên khoa, Bác sĩ và Ngày khám');
+      toast.error('Vui lòng chọn đầy đủ: Chuyên khoa, Bác sĩ và Ngày khám');
       return;
     }
     // Redirect đến doctor detail với date query param
